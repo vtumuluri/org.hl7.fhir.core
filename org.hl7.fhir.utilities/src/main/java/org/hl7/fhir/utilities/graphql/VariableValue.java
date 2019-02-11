@@ -41,6 +41,11 @@ public class VariableValue extends Value {
     throw new EGraphEngine("Cannot write a variable to JSON");
   }
 
+  @Override
+  public String getValueAsString() {
+    return value;
+  }
+
   public String toString() {
     return value;
   }

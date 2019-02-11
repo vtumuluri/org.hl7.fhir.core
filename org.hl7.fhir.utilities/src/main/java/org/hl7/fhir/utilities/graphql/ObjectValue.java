@@ -75,6 +75,11 @@ public class ObjectValue extends Value {
     write(b, indent, System.lineSeparator());
   }
 
+  @Override
+  public String getValueAsString() {
+    return null;
+  }
+
   public String getValue() {
     return null;
   }
