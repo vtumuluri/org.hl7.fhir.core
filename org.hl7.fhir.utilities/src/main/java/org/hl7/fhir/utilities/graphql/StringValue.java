@@ -40,6 +40,12 @@ public class StringValue extends Value {
   public boolean isValue(String v) {
     return v.equals(value);      
   }
+
+  @Override
+  public String getValueAsString() {
+    return value;
+  }
+
   public String toString() {
     return value;
   }

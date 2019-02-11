@@ -53,6 +53,11 @@ public class NameValue extends Value {
     return v.equals(value);      
   }
 
+  @Override
+  public String getValueAsString() {
+    return value;
+  }
+
   public String toString() {
     return value;
   }
