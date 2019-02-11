@@ -28,27 +28,20 @@ import org.apache.commons.codec.binary.Base64;
 import org.hl7.fhir.dstu2.model.CodeableConcept;
 import org.hl7.fhir.dstu2.utils.ToolingExtensions;
 import org.hl7.fhir.dstu3.conformance.ProfileUtilities;
-import org.hl7.fhir.dstu3.model.Annotation;
+import org.hl7.fhir.dstu3.model.*;
 import org.hl7.fhir.dstu3.model.CapabilityStatement.SystemRestfulInteraction;
-import org.hl7.fhir.dstu3.model.CodeSystem;
 import org.hl7.fhir.dstu3.model.CodeSystem.CodeSystemContentMode;
 import org.hl7.fhir.dstu3.model.CodeSystem.ConceptDefinitionComponent;
 import org.hl7.fhir.dstu3.model.CodeSystem.ConceptDefinitionDesignationComponent;
-import org.hl7.fhir.dstu3.model.Coding;
-import org.hl7.fhir.dstu3.model.ConceptMap;
 import org.hl7.fhir.dstu3.model.ConceptMap.ConceptMapGroupComponent;
 import org.hl7.fhir.dstu3.model.ConceptMap.SourceElementComponent;
-import org.hl7.fhir.dstu3.model.ContactDetail;
 import org.hl7.fhir.dstu3.model.DocumentReference.ReferredDocumentStatus;
-import org.hl7.fhir.dstu3.model.Dosage;
 import org.hl7.fhir.dstu3.model.ElementDefinition.ElementDefinitionSlicingDiscriminatorComponent;
-import org.hl7.fhir.dstu3.model.Enumeration;
 import org.hl7.fhir.dstu3.model.Immunization.ImmunizationPractitionerComponent;
 import org.hl7.fhir.dstu3.model.ReferralRequest.ReferralPriority;
 import org.hl7.fhir.dstu3.model.StructureDefinition.StructureDefinitionKind;
 import org.hl7.fhir.dstu3.model.StructureDefinition.TypeDerivationRule;
 import org.hl7.fhir.dstu3.model.Timing.EventTiming;
-import org.hl7.fhir.dstu3.model.UriType;
 import org.hl7.fhir.dstu3.terminologies.CodeSystemUtilities;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.utilities.Utilities;
@@ -13119,24 +13112,24 @@ public org.hl7.fhir.dstu2.model.ValueSet.ConceptDefinitionDesignationComponent c
     throw new Error("Unknown resource "+src.fhirType());
   }
 
-  private org.hl7.fhir.instance.model.Specimen.SpecimenStatus convertSpecimenStatus(Specimen.SpecimenStatus status) {
+  private org.hl7.fhir.dstu2.model.Specimen.SpecimenStatus convertSpecimenStatus(Specimen.SpecimenStatus status) {
     if (status == null) {
       return null;
     }
     switch(status) {
-      case AVAILABLE: return org.hl7.fhir.instance.model.Specimen.SpecimenStatus.AVAILABLE;
-      case UNAVAILABLE: return org.hl7.fhir.instance.model.Specimen.SpecimenStatus.UNAVAILABLE;
-      case ENTEREDINERROR: return org.hl7.fhir.instance.model.Specimen.SpecimenStatus.ENTEREDINERROR;
-      case UNSATISFACTORY: return org.hl7.fhir.instance.model.Specimen.SpecimenStatus.UNSATISFACTORY;
-      case NULL: return org.hl7.fhir.instance.model.Specimen.SpecimenStatus.NULL;
-      default: return org.hl7.fhir.instance.model.Specimen.SpecimenStatus.NULL;
+      case AVAILABLE: return org.hl7.fhir.dstu2.model.Specimen.SpecimenStatus.AVAILABLE;
+      case UNAVAILABLE: return org.hl7.fhir.dstu2.model.Specimen.SpecimenStatus.UNAVAILABLE;
+      case ENTEREDINERROR: return org.hl7.fhir.dstu2.model.Specimen.SpecimenStatus.ENTEREDINERROR;
+      case UNSATISFACTORY: return org.hl7.fhir.dstu2.model.Specimen.SpecimenStatus.UNSATISFACTORY;
+      case NULL: return org.hl7.fhir.dstu2.model.Specimen.SpecimenStatus.NULL;
+      default: return org.hl7.fhir.dstu2.model.Specimen.SpecimenStatus.NULL;
     }
   }
 
-  public org.hl7.fhir.instance.model.Specimen.SpecimenTreatmentComponent convertSpecimenProcessingComponent(org.hl7.fhir.dstu3.model.Specimen.SpecimenProcessingComponent src) throws FHIRException {
+  public org.hl7.fhir.dstu2.model.Specimen.SpecimenTreatmentComponent convertSpecimenProcessingComponent(org.hl7.fhir.dstu3.model.Specimen.SpecimenProcessingComponent src) throws FHIRException {
     if (src == null)
       return null;
-    org.hl7.fhir.instance.model.Specimen.SpecimenTreatmentComponent tgt = new org.hl7.fhir.instance.model.Specimen.SpecimenTreatmentComponent();
+    org.hl7.fhir.dstu2.model.Specimen.SpecimenTreatmentComponent tgt = new org.hl7.fhir.dstu2.model.Specimen.SpecimenTreatmentComponent();
     copyElement(src, tgt);
     if (src.hasDescription())
       tgt.setDescription(src.getDescription());
@@ -13147,10 +13140,10 @@ public org.hl7.fhir.dstu2.model.ValueSet.ConceptDefinitionDesignationComponent c
     return tgt;
   }
 
-  public org.hl7.fhir.instance.model.Specimen.SpecimenContainerComponent convertSpecimenContainerComponent(org.hl7.fhir.dstu3.model.Specimen.SpecimenContainerComponent src) throws FHIRException {
+  public org.hl7.fhir.dstu2.model.Specimen.SpecimenContainerComponent convertSpecimenContainerComponent(org.hl7.fhir.dstu3.model.Specimen.SpecimenContainerComponent src) throws FHIRException {
     if (src == null)
       return null;
-    org.hl7.fhir.instance.model.Specimen.SpecimenContainerComponent tgt = new org.hl7.fhir.instance.model.Specimen.SpecimenContainerComponent();
+    org.hl7.fhir.dstu2.model.Specimen.SpecimenContainerComponent tgt = new org.hl7.fhir.dstu2.model.Specimen.SpecimenContainerComponent();
     copyElement(src, tgt);
     for (org.hl7.fhir.dstu3.model.Identifier t : src.getIdentifier())
       tgt.addIdentifier(convertIdentifier(t));
@@ -13166,10 +13159,10 @@ public org.hl7.fhir.dstu2.model.ValueSet.ConceptDefinitionDesignationComponent c
       tgt.setAdditive(convertType(src.getAdditive()));
     return tgt;
   }
-  public org.hl7.fhir.instance.model.Specimen.SpecimenCollectionComponent convertSpecimenCollectionComponent(org.hl7.fhir.dstu3.model.Specimen.SpecimenCollectionComponent src) throws FHIRException {
+  public org.hl7.fhir.dstu2.model.Specimen.SpecimenCollectionComponent convertSpecimenCollectionComponent(org.hl7.fhir.dstu3.model.Specimen.SpecimenCollectionComponent src) throws FHIRException {
     if (src == null)
       return null;
-    org.hl7.fhir.instance.model.Specimen.SpecimenCollectionComponent tgt = new org.hl7.fhir.instance.model.Specimen.SpecimenCollectionComponent();
+    org.hl7.fhir.dstu2.model.Specimen.SpecimenCollectionComponent tgt = new org.hl7.fhir.dstu2.model.Specimen.SpecimenCollectionComponent();
     copyElement(src, tgt);
     if (src.hasCollector())
       tgt.setCollector(convertReference(src.getCollector()));
@@ -13184,11 +13177,11 @@ public org.hl7.fhir.dstu2.model.ValueSet.ConceptDefinitionDesignationComponent c
     return tgt;
   }
 
-  private org.hl7.fhir.instance.model.Specimen convertSpecimen(Specimen src) {
+  private org.hl7.fhir.dstu2.model.Specimen convertSpecimen(Specimen src) {
     if (src == null) {
       return null;
     }
-    org.hl7.fhir.instance.model.Specimen tgt = new org.hl7.fhir.instance.model.Specimen();
+    org.hl7.fhir.dstu2.model.Specimen tgt = new org.hl7.fhir.dstu2.model.Specimen();
     copyDomainResource(src, tgt);
     for (org.hl7.fhir.dstu3.model.Identifier t : src.getIdentifier())
       tgt.addIdentifier(convertIdentifier(t));
@@ -13211,6 +13204,7 @@ public org.hl7.fhir.dstu2.model.ValueSet.ConceptDefinitionDesignationComponent c
     for (org.hl7.fhir.dstu3.model.Specimen.SpecimenContainerComponent t : src.getContainer())
       tgt.addContainer(convertSpecimenContainerComponent(t));
     return tgt;
+  }
 
   public static boolean convertsResource(String rt) {
     return Utilities.existsInList(rt, "Parameters", "Appointment", "AppointmentResponse", "AuditEvent", "Basic", "Binary", "Bundle", "CarePlan", "ClinicalImpression", "Communication", "CommunicationRequest", "Composition",
