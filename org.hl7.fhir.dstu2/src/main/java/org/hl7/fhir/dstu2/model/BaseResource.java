@@ -20,8 +20,8 @@ package org.hl7.fhir.dstu2.model;
  * #L%
  */
 
-import org.hl7.fhir.dstu2.model.api.IAnyResource;
-import org.hl7.fhir.dstu2.model.api.IIdType;
+import org.hl7.fhir.instance.model.api.IAnyResource;
+import org.hl7.fhir.instance.model.api.IIdType;
 
 public abstract class BaseResource extends Base implements IAnyResource {
 

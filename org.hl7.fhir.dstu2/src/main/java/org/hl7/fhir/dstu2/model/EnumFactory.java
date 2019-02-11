@@ -21,7 +21,7 @@ package org.hl7.fhir.dstu2.model;
  */
 
 
-import org.hl7.fhir.dstu2.model.api.IBaseEnumFactory;
+import org.hl7.fhir.instance.model.api.IBaseEnumFactory;
 
 
 /*

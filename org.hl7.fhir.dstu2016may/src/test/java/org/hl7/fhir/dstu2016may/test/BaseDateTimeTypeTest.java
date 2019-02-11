@@ -8,8 +8,8 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import org.hl7.fhir.dstu2016may.model.DateType;
-import org.hl7.fhir.dstu2016may.model.TemporalPrecisionEnum;
 import org.junit.Before;
 import org.junit.Test;
 
