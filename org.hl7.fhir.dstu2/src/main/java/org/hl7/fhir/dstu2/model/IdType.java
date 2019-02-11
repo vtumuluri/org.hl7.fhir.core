@@ -59,10 +59,10 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.hl7.fhir.dstu2.model.annotations.DatatypeDef;
-import org.hl7.fhir.dstu2.model.api.IBaseResource;
-import org.hl7.fhir.dstu2.model.api.IIdType;
-import org.hl7.fhir.dstu2.model.api.IPrimitiveType;
+import ca.uhn.fhir.model.api.annotation.DatatypeDef;
+import org.hl7.fhir.instance.model.api.IBaseResource;
+import org.hl7.fhir.instance.model.api.IIdType;
+import org.hl7.fhir.instance.model.api.IPrimitiveType;
 
 /**
  * This class represents the logical identity for a resource, or as much of that
@@ -756,4 +756,25 @@ public final class IdType extends UriType implements IPrimitiveType<String>, IId
 	public String fhirType() {
 		return "id";
 	}
+
+  public IIdType setParts(String theBaseUrl, String theResourceType, String theIdPart, String theVersionIdPart) {
+    if (isNotBlank(theVersionIdPart)) {
+      Validate.notBlank(theResourceType, "If theVersionIdPart is populated, theResourceType and theIdPart must be populated");
+      Validate.notBlank(theIdPart, "If theVersionIdPart is populated, theResourceType and theIdPart must be populated");
+    }
+    if (isNotBlank(theBaseUrl) && isNotBlank(theIdPart)) {
+      Validate.notBlank(theResourceType, "If theBaseUrl is populated and theIdPart is populated, theResourceType must be populated");
+    }
+
+    setValue(null);
+
+    myBaseUrl = theBaseUrl;
+    myResourceType = theResourceType;
+    myUnqualifiedId = theIdPart;
+    myUnqualifiedVersionId = StringUtils.defaultIfBlank(theVersionIdPart, null);
+    myHaveComponentParts = true;
+
+    return this;
+  }
+
 }

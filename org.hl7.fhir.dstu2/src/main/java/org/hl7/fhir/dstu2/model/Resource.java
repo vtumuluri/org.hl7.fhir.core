@@ -53,9 +53,10 @@ package org.hl7.fhir.dstu2.model;
 // Generated on Wed, Jul 13, 2016 05:32+1000 for FHIR v1.0.2
 import java.util.List;
 
-import org.hl7.fhir.dstu2.model.annotations.Child;
-import org.hl7.fhir.dstu2.model.annotations.Description;
-import org.hl7.fhir.dstu2.model.api.IAnyResource;
+import ca.uhn.fhir.context.FhirVersionEnum;
+import ca.uhn.fhir.model.api.annotation.Child;
+import ca.uhn.fhir.model.api.annotation.Description;
+import org.hl7.fhir.instance.model.api.IAnyResource;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.utilities.Utilities;
 /**
@@ -353,6 +354,11 @@ public abstract class Resource extends BaseResource implements IAnyResource {
       }
 
   public abstract ResourceType getResourceType();
+
+  @Override
+  public FhirVersionEnum getStructureFhirVersionEnum() {
+    return FhirVersionEnum.DSTU2_HL7ORG;
+  }
 
 }
 

@@ -54,11 +54,11 @@ package org.hl7.fhir.dstu2.model;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hl7.fhir.dstu2.model.annotations.Child;
-import org.hl7.fhir.dstu2.model.annotations.Description;
-import org.hl7.fhir.dstu2.model.api.IBaseHasExtensions;
-import org.hl7.fhir.dstu2.model.api.IBaseHasModifierExtensions;
-import org.hl7.fhir.dstu2.model.api.IDomainResource;
+import ca.uhn.fhir.model.api.annotation.Child;
+import ca.uhn.fhir.model.api.annotation.Description;
+import org.hl7.fhir.instance.model.api.IBaseHasExtensions;
+import org.hl7.fhir.instance.model.api.IBaseHasModifierExtensions;
+import org.hl7.fhir.instance.model.api.IDomainResource;
 import org.hl7.fhir.exceptions.FHIRException;
 /**
  * A resource that includes narrative, extensions, and contained resources.

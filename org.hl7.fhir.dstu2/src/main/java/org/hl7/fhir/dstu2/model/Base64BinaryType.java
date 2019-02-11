@@ -50,12 +50,12 @@ package org.hl7.fhir.dstu2.model;
 
 
 import org.apache.commons.codec.binary.Base64;
-import org.hl7.fhir.dstu2.model.annotations.DatatypeDef;
+import ca.uhn.fhir.model.api.annotation.DatatypeDef;
 
 /**
  * Primitive type "base64Binary" in FHIR: a sequence of bytes represented in base64
  */
-@DatatypeDef(name="base64binary")
+@DatatypeDef(name="base64Binary")
 public class Base64BinaryType extends PrimitiveType<byte[]> {
 
 	private static final long serialVersionUID = 3L;

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import org.apache.commons.lang3.NotImplementedException;
 import org.fhir.ucum.Decimal;
 import org.fhir.ucum.Pair;
@@ -43,7 +44,6 @@ import org.hl7.fhir.r4.model.StringType;
 import org.hl7.fhir.r4.model.StructureDefinition;
 import org.hl7.fhir.r4.model.StructureDefinition.StructureDefinitionKind;
 import org.hl7.fhir.r4.model.StructureDefinition.TypeDerivationRule;
-import org.hl7.fhir.r4.model.TemporalPrecisionEnum;
 import org.hl7.fhir.r4.model.TimeType;
 import org.hl7.fhir.r4.model.TypeDetails;
 import org.hl7.fhir.r4.model.TypeDetails.ProfiledType;

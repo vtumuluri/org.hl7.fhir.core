@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ca.uhn.fhir.model.api.TemporalPrecisionEnum;
 import org.fhir.ucum.Decimal;
 import org.fhir.ucum.UcumException;
 import org.hl7.fhir.dstu2016may.metamodel.ParserBase;
@@ -54,7 +55,6 @@ import org.hl7.fhir.dstu2016may.model.Resource;
 import org.hl7.fhir.dstu2016may.model.StringType;
 import org.hl7.fhir.dstu2016may.model.StructureDefinition;
 import org.hl7.fhir.dstu2016may.model.StructureDefinition.TypeDerivationRule;
-import org.hl7.fhir.dstu2016may.model.TemporalPrecisionEnum;
 import org.hl7.fhir.dstu2016may.model.TimeType;
 import org.hl7.fhir.dstu2016may.model.Type;
 import org.hl7.fhir.dstu2016may.utils.FHIRLexer.FHIRLexerException;

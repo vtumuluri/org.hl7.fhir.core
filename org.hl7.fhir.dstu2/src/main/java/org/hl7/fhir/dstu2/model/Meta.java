@@ -55,10 +55,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import org.hl7.fhir.dstu2.model.annotations.Child;
-import org.hl7.fhir.dstu2.model.annotations.DatatypeDef;
-import org.hl7.fhir.dstu2.model.annotations.Description;
-import org.hl7.fhir.dstu2.model.api.IBaseMetaType;
+import ca.uhn.fhir.model.api.annotation.Child;
+import ca.uhn.fhir.model.api.annotation.DatatypeDef;
+import ca.uhn.fhir.model.api.annotation.Description;
+import org.apache.commons.lang3.StringUtils;
+import org.hl7.fhir.instance.model.api.IBaseCoding;
+import org.hl7.fhir.instance.model.api.IBaseMetaType;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.utilities.Utilities;
 /**
@@ -160,7 +162,31 @@ public class Meta extends Type implements IBaseMetaType {
       return this;
     }
 
-    /**
+  @Override
+  public IBaseCoding getTag(String theSystem, String theCode) {
+      for (Coding next : getTag()) {
+        if (StringUtils.equals(theSystem, next.getSystem())) {
+          if (StringUtils.equals(theCode, next.getCode())) {
+            return next;
+          }
+        }
+      }
+    return null;
+  }
+
+  @Override
+  public IBaseCoding getSecurity(String theSystem, String theCode) {
+    for (Coding next : getSecurity()) {
+      if (StringUtils.equals(theSystem, next.getSystem())) {
+        if (StringUtils.equals(theCode, next.getCode())) {
+          return next;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
      * @return {@link #lastUpdated} (When the resource last changed - e.g. when the version changed.). This is the underlying object with id, value and extensions. The accessor "getLastUpdated" gives direct access to the value
      */
     public InstantType getLastUpdatedElement() { 
