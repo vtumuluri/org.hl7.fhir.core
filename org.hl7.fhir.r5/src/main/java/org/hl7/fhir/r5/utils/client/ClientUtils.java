@@ -227,7 +227,6 @@ public class ClientUtils {
 
   /**
    * @param resourceFormat
-   * @param options
    * @return
    */
   protected <T extends Resource> ResourceRequest<T> issueResourceRequest(String resourceFormat, HttpUriRequest request, byte[] payload) {
@@ -236,7 +235,6 @@ public class ClientUtils {
 
   /**
    * @param resourceFormat
-   * @param options
    * @return
    */
   protected <T extends Resource> ResourceRequest<T> issueResourceRequest(String resourceFormat, HttpUriRequest request, byte[] payload, List<Header> headers) {
@@ -312,7 +310,6 @@ public class ClientUtils {
   /**
    * 
    * @param request
-   * @param payload
    * @return
    */
   protected HttpResponse sendRequest(HttpUriRequest request) {
