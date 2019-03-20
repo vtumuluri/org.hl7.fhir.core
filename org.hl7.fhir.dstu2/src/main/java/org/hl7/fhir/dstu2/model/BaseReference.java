@@ -54,7 +54,7 @@ public abstract class BaseReference extends Type implements IBaseReference, ICom
 
 	/**
      * Retrieves the actual resource referenced by this reference. Note that the resource itself is not
-     * a part of the FHIR "wire format" and is never transmitted or receieved inline, but this property
+     * a part of the FHIR "wire format" and is never transmitted or received inline, but this property
      * may be changed/accessed by parsers.
      */
     public IBaseResource getResource() {
@@ -70,11 +70,12 @@ public abstract class BaseReference extends Type implements IBaseReference, ICom
 
     /**
      * Sets the actual resource referenced by this reference. Note that the resource itself is not
-     * a part of the FHIR "wire format" and is never transmitted or receieved inline, but this property
+     * a part of the FHIR "wire format" and is never transmitted or received inline, but this property
      * may be changed/accessed by parsers.
      */
-    public void setResource(IBaseResource theResource) {
+    public BaseReference setResource(IBaseResource theResource) {
         resource = theResource;
+        return this;
     }
 
     @Override
