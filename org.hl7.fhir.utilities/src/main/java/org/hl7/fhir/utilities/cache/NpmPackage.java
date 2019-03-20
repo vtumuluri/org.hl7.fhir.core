@@ -144,6 +144,17 @@ import com.google.gson.JsonObject;
       return res;
     }
 
+    public List<String> listResources(String... types) throws IOException {
+      List<String> files = list("package");
+      List<String> res = new ArrayList<String>();
+      for (String s : files) {
+        String[] n = s.split("\\-");
+        if (Utilities.existsInList(n[0], types))
+          res.add(s);
+      }
+      return res;
+    }
+    
     /** 
      * Copies all the files in the package folder [folder] to the nominated dest, 
      * and returns a list of all the file names copied
@@ -279,6 +290,19 @@ import com.google.gson.JsonObject;
         return npm.get("url").getAsString();
       else
         return npm.get("canonical").getAsString();
+    }
+
+    public InputStream loadResource(String type, String id) throws IOException {
+      String file = type+"-"+id+".json";
+      if (content.containsKey("package/"+file))
+        return new ByteArrayInputStream(content.get("package/"+file));
+      else {
+        File f = new File(Utilities.path(path, "package", file));
+        if (f.exists())
+          return new FileInputStream(f);
+        else
+          return null;
+      }
     }
 
 

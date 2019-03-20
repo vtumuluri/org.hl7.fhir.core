@@ -26,6 +26,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -137,7 +138,7 @@ import ca.uhn.fhir.util.ObjectUtil;
 
 /**
  * Thinking of using this in a java program? Don't! 
- * You should use on of the wrappers instead. Either in HAPI, or use ValidationEngine
+ * You should use one of the wrappers instead. Either in HAPI, or use ValidationEngine
  * 
  * @author Grahame Grieve
  *
@@ -237,7 +238,7 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
         throw new NotImplementedException("Not done yet (ValidatorHostServices.conformsToProfile), when item is element");
       boolean ok = true;
       for (ValidationMessage v : valerrors)
-        ok = ok && v.getLevel().isError();
+        ok = ok && !v.getLevel().isError();
       return ok;
     }
 
@@ -1483,7 +1484,7 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
       }
     }
     if (type.equals("dateTime")) {
-      rule(errors, IssueType.INVALID, e.line(), e.col(), path, yearIsValid(e.primitiveValue()), "The value '" + e.primitiveValue() + "' does not have a valid year");
+      warning(errors, IssueType.INVALID, e.line(), e.col(), path, yearIsValid(e.primitiveValue()), "The value '" + e.primitiveValue() + "' is outside the range of reasonable years - check for data entry error");
       rule(errors, IssueType.INVALID, e.line(), e.col(), path,
           e.primitiveValue()
           .matches("([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1])(T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\\.[0-9]+)?(Z|(\\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))?)?)?)?"),
@@ -1508,7 +1509,7 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
       }
     }
     if (type.equals("date")) {
-        rule(errors, IssueType.INVALID, e.line(), e.col(), path, yearIsValid(e.primitiveValue()), "The value '" + e.primitiveValue() + "' does not have a valid year");
+      warning(errors, IssueType.INVALID, e.line(), e.col(), path, yearIsValid(e.primitiveValue()), "The value '" + e.primitiveValue() + "' is outside the range of reasonable years - check for data entry error");
         rule(errors, IssueType.INVALID, e.line(), e.col(), path, e.primitiveValue().matches("([0-9]([0-9]([0-9][1-9]|[1-9]0)|[1-9]00)|[1-9]000)(-(0[1-9]|1[0-2])(-(0[1-9]|[1-2][0-9]|3[0-1]))?)?"),
             "Not a valid date");
         rule(errors, IssueType.INVALID, e.line(), e.col(), path, !context.hasMaxLength() || context.getMaxLength()==0 ||  e.primitiveValue().length() <= context.getMaxLength(), "value is longer than permitted maximum value of " + context.getMaxLength());
@@ -1579,7 +1580,7 @@ public class InstanceValidator extends BaseValidator implements IResourceValidat
       rule(errors, IssueType.INVALID, e.line(), e.col(), path,
           e.primitiveValue().matches("-?[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])T([01][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)(\\.[0-9]+)?(Z|(\\+|-)((0[0-9]|1[0-3]):[0-5][0-9]|14:00))"),
           "The instant '" + e.primitiveValue() + "' is not valid (by regex)");
-      rule(errors, IssueType.INVALID, e.line(), e.col(), path, yearIsValid(e.primitiveValue()), "The value '" + e.primitiveValue() + "' does not have a valid year");
+      warning(errors, IssueType.INVALID, e.line(), e.col(), path, yearIsValid(e.primitiveValue()), "The value '" + e.primitiveValue() + "' is outside the range of reasonable years - check for data entry error");
       try {
         InstantType dt = new InstantType(e.primitiveValue());
       } catch (Exception ex) {
@@ -3293,11 +3294,16 @@ private String misplacedItemError(QuestionnaireItemComponent qItem) {
       String url = getCanonicalURLForEntry(entry);
       String id = getIdForEntry(entry);
       if (url != null) {
-        if (!(!url.equals(fullUrl) || (url.matches(uriRegexForVersion()) && url.endsWith("/"+id))))
+        if (!(!url.equals(fullUrl) || (url.matches(uriRegexForVersion()) && url.endsWith("/"+id))) && !isV3orV2Url(url))
           rule(errors, IssueType.INVALID, entry.line(), entry.col(), stack.addToLiteralPath("entry", ":0"), false, "The canonical URL ("+url+") cannot match the fullUrl ("+fullUrl+") unless the resource id ("+id+") also matches");
         rule(errors, IssueType.INVALID, entry.line(), entry.col(), stack.addToLiteralPath("entry", ":0"), !url.equals(fullUrl) || serverBase == null || (url.equals(Utilities.pathURL(serverBase, entry.getNamedChild("resource").fhirType(), id))), "The canonical URL ("+url+") cannot match the fullUrl ("+fullUrl+") unless on the canonical server itself");
       }
     }
+  }
+
+  // hack for pre-UTG v2/v3
+  private boolean isV3orV2Url(String url) {
+    return url.startsWith("http://hl7.org/fhir/v3/") || url.startsWith("http://hl7.org/fhir/v2/");
   }
 
   public final static String URI_REGEX3 = "((http|https)://([A-Za-z0-9\\\\\\.\\:\\%\\$]*\\/)*)?(Account|ActivityDefinition|AllergyIntolerance|AdverseEvent|Appointment|AppointmentResponse|AuditEvent|Basic|Binary|BodySite|Bundle|CapabilityStatement|CarePlan|CareTeam|ChargeItem|Claim|ClaimResponse|ClinicalImpression|CodeSystem|Communication|CommunicationRequest|CompartmentDefinition|Composition|ConceptMap|Condition (aka Problem)|Consent|Contract|Coverage|DataElement|DetectedIssue|Device|DeviceComponent|DeviceMetric|DeviceRequest|DeviceUseStatement|DiagnosticReport|DocumentManifest|DocumentReference|EligibilityRequest|EligibilityResponse|Encounter|Endpoint|EnrollmentRequest|EnrollmentResponse|EpisodeOfCare|ExpansionProfile|ExplanationOfBenefit|FamilyMemberHistory|Flag|Goal|GraphDefinition|Group|GuidanceResponse|HealthcareService|ImagingManifest|ImagingStudy|Immunization|ImmunizationRecommendation|ImplementationGuide|Library|Linkage|List|Location|Measure|MeasureReport|Media|Medication|MedicationAdministration|MedicationDispense|MedicationRequest|MedicationStatement|MessageDefinition|MessageHeader|NamingSystem|NutritionOrder|Observation|OperationDefinition|OperationOutcome|Organization|Parameters|Patient|PaymentNotice|PaymentReconciliation|Person|PlanDefinition|Practitioner|PractitionerRole|Procedure|ProcedureRequest|ProcessRequest|ProcessResponse|Provenance|Questionnaire|QuestionnaireResponse|ReferralRequest|RelatedPerson|RequestGroup|ResearchStudy|ResearchSubject|RiskAssessment|Schedule|SearchParameter|Sequence|ServiceDefinition|Slot|Specimen|StructureDefinition|StructureMap|Subscription|Substance|SupplyDelivery|SupplyRequest|Task|TestScript|TestReport|ValueSet|VisionPrescription)\\/[A-Za-z0-9\\-\\.]{1,64}(\\/_history\\/[A-Za-z0-9\\-\\.]{1,64})?";
@@ -3361,7 +3367,7 @@ private String misplacedItemError(QuestionnaireItemComponent qItem) {
       candidateResources.add(entry.getNamedChild("resource"));
     }
     // Find resources that are pointed to as stylesheet links
-    List<String> sheets = new ArrayList();
+    List<String> sheets = new ArrayList<>();
     List<Element> links = bundle.getChildren("link");
     for (Element link : links) {
       if (link.getChildValue("relation").equals("stylesheet")) {
@@ -4122,10 +4128,14 @@ private String misplacedItemError(QuestionnaireItemComponent qItem) {
     }
     try {
       int i = Integer.parseInt(v.substring(0, Math.min(4, v.length())));
-      return i >= 1800 && i <= 2100;
+      return i >= 1800 && i <= thisYear() + 80;
     } catch (NumberFormatException e) {
       return false;
     }
+  }
+
+  private int thisYear() {
+    return Calendar.getInstance().get(Calendar.YEAR);
   }
 
   public class ChildIterator {
@@ -4387,10 +4397,16 @@ private String misplacedItemError(QuestionnaireItemComponent qItem) {
       return "searchType.exists() implies type = 'string'";
     if ("abatement.empty() or (abatement as boolean).not()  or clinicalStatus='resolved' or clinicalStatus='remission' or clinicalStatus='inactive'".equals(expr))
       return "abatement.empty() or (abatement is boolean).not() or (abatement as boolean).not() or (clinicalStatus = 'resolved') or (clinicalStatus = 'remission') or (clinicalStatus = 'inactive')";    
+    if ("(component.empty() and related.empty()) implies (dataAbsentReason or value)".equals(expr))
+      return "(component.empty() and related.empty()) implies (dataAbsentReason.exists() or value.exists())";
     
     if ("".equals(expr))
       return "";
     return expr;
+  }
+
+  public IEvaluationContext getExternalHostServices() {
+    return externalHostServices;
   }
 
 
