@@ -150,7 +150,7 @@
 				"errorCount": 0
       },
       "primitive-bad.xml" : {
-				"errorCount": 49
+				"errorCount": 47
       },
       "primitive-bad-empty.xml" : {
 				"errorCount": 3
@@ -460,6 +460,13 @@
         "version" : "3.0",
         "questionnaire" : "questionnaire-enableWhen-test3.xml",
         "errorCount": 0
+      },
+      "extension-slice.xml" : {
+        "errorCount": 0,
+        "profile" : {
+          "source" : "extension-slice-profile.xml", 
+          "errorCount": 0          
+        }
       }
 		}
 	}

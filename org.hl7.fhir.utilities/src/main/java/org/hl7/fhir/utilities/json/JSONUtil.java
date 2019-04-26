@@ -1,5 +1,9 @@
 package org.hl7.fhir.utilities.json;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 /*-
  * #%L
  * org.hl7.fhir.utilities
@@ -22,12 +26,13 @@ package org.hl7.fhir.utilities.json;
 
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 public class JSONUtil {
 
-  public static JsonObject parse(String json) {
-    return (JsonObject) new com.google.gson.JsonParser().parse(json);    
+  public static JsonObject parse(String json) throws IOException {
+    return JsonTrackingParser.parseJson(json);    
     
   }
 
@@ -53,6 +58,29 @@ public class JSONUtil {
   public static JsonObject addObj(JsonArray arr) {
     JsonObject res = new JsonObject();
     arr.add(res);
+    return res;
+  }
+
+  public static JsonObject findByStringProp(JsonArray arr, String prop, String value) {
+    for (JsonElement e : arr) {
+      JsonObject obj = (JsonObject) e;
+      if (obj.has(prop) && obj.get(prop).getAsString().equals(value)) 
+        return obj;
+    }
+    return null;
+  }
+
+  public static String str(JsonObject json, String name) {
+    JsonElement e = json.get(name);
+    return e == null ? null : e.getAsString();
+  }
+
+  public static List<JsonObject> objects(JsonObject json, String name) {
+    List<JsonObject> res = new ArrayList<>();
+    if (json.has(name))
+      for (JsonElement e : json.getAsJsonArray(name))
+        if (e instanceof JsonObject)
+          res.add((JsonObject) e);
     return res;
   }
 

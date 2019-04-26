@@ -1,8 +1,10 @@
-package org.hl7.fhir.r4.utils.formats;
+package org.hl7.fhir.utilities.json;
+
+import java.io.File;
 
 /*-
  * #%L
- * org.hl7.fhir.r4
+ * org.hl7.fhir.r5
  * %%
  * Copyright (C) 2014 - 2019 Health Level 7
  * %%
@@ -22,10 +24,12 @@ package org.hl7.fhir.r4.utils.formats;
 
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Stack;
 
+import org.hl7.fhir.utilities.TextFile;
 import org.hl7.fhir.utilities.Utilities;
 
 import com.google.gson.JsonArray;
@@ -332,10 +336,40 @@ public class JsonTrackingParser {
   private ItemType itemType = ItemType.Object;
   private String itemName;
   private String itemValue;
+  private boolean errorOnDuplicates = true;
 
-	public static JsonObject parse(String source, Map<JsonElement, LocationData> map) throws IOException {
+  public static JsonObject parseJson(String source) throws IOException {
+    return parse(source, null);
+  }
+  
+  public static JsonObject parseJson(InputStream stream) throws IOException {
+    return parse(TextFile.streamToString(stream), null);
+  }
+  
+  public static JsonObject parseJson(byte[] stream) throws IOException {
+    return parse(TextFile.bytesToString(stream), null);
+  }
+  
+  public static JsonObject parseJson(byte[] stream, boolean allowDuplicates) throws IOException {
+    return parse(TextFile.bytesToString(stream), null, allowDuplicates);
+  }
+  
+  public static JsonObject parseJson(File source) throws IOException {
+    return parse(TextFile.fileToString(source), null);
+  }
+  
+  public static JsonObject parseJsonFile(String source) throws IOException {
+    return parse(TextFile.fileToString(source), null);
+  }
+  
+  public static JsonObject parse(String source, Map<JsonElement, LocationData> map) throws IOException {
+    return parse(source, map, false);
+  }
+    
+  public static JsonObject parse(String source, Map<JsonElement, LocationData> map, boolean allowDuplicates) throws IOException {
 		JsonTrackingParser self = new JsonTrackingParser();
 		self.map = map;
+		self.setErrorOnDuplicates(!allowDuplicates);
     return self.parse(source);
 	}
 
@@ -362,14 +396,14 @@ public class JsonTrackingParser {
       map.put(obj, lexer.location.copy());
 
 		while (!(itemType == ItemType.End) || (root && (itemType == ItemType.Eof))) {
-			if (obj.has(itemName))
-				throw lexer.error("Duplicated property name: "+itemName);
-
 			switch (itemType) {
 			case Object:
 				JsonObject child = new JsonObject(); //(obj.path+'.'+ItemName);
 				LocationData loc = lexer.location.copy();
-				obj.add(itemName, child);
+	      if (!obj.has(itemName))
+	        obj.add(itemName, child);
+	      else if (errorOnDuplicates)
+	        throw lexer.error("Duplicated property name: "+itemName);
 				next();
 				readObject(child, false);
 				if (map != null)
@@ -377,34 +411,50 @@ public class JsonTrackingParser {
 				break;
 			case Boolean :
 				JsonPrimitive v = new JsonPrimitive(Boolean.valueOf(itemValue));
-				obj.add(itemName, v);
+        if (!obj.has(itemName))
+  				obj.add(itemName, v);
+        else if (errorOnDuplicates)
+          throw lexer.error("Duplicated property name: "+itemName);
 				if (map != null)
 		      map.put(v, lexer.location.copy());
 				break;
 			case String:
 				v = new JsonPrimitive(itemValue);
-				obj.add(itemName, v);
+        if (!obj.has(itemName))
+  				obj.add(itemName, v);
+        else if (errorOnDuplicates)
+          throw lexer.error("Duplicated property name: "+itemName);
 				if (map != null)
 		      map.put(v, lexer.location.copy());
 				break;
 			case Number:
 				v = new JsonPrimitive(new PresentedBigDecimal(itemValue));
-				obj.add(itemName, v);
+        if (!obj.has(itemName))
+  				obj.add(itemName, v);
+        else if (errorOnDuplicates)
+          throw lexer.error("Duplicated property name: "+itemName);
 				if (map != null)
 		      map.put(v, lexer.location.copy());
 				break;
 			case Null:
 				JsonNull n = new JsonNull();
-				obj.add(itemName, n);
+        if (!obj.has(itemName))
+  				obj.add(itemName, n);
+        else if (errorOnDuplicates)
+          throw lexer.error("Duplicated property name: "+itemName);
 				if (map != null)
 		      map.put(n, lexer.location.copy());
 				break;
 			case Array:
 				JsonArray arr = new JsonArray(); // (obj.path+'.'+ItemName);
 				loc = lexer.location.copy();
-				obj.add(itemName, arr);
+        if (!obj.has(itemName))
+  				obj.add(itemName, arr);
+        else if (errorOnDuplicates)
+          throw lexer.error("Duplicated property name: "+itemName);
 				next();
-				readArray(arr, false);
+				if (!readArray(arr, false))
+				  next(true);
 				if (map != null)
 		      map.put(arr, loc);
 				break;
@@ -418,8 +468,10 @@ public class JsonTrackingParser {
 		}
 	}
 
-	private void readArray(JsonArray arr, boolean root) throws IOException {
+	private boolean readArray(JsonArray arr, boolean root) throws IOException {
+	  boolean res = false;
 	  while (!((itemType == ItemType.End) || (root && (itemType == ItemType.Eof)))) {
+	    res  = true;
 	    switch (itemType) {
 	    case Object:
 	    	JsonObject obj  = new JsonObject(); // (arr.path+'['+inttostr(i)+']');
@@ -466,9 +518,14 @@ public class JsonTrackingParser {
 	    }
 	    next();
 	  }
+	  return res;
 	}
 
-	private void next() throws IOException {
+  private void next() throws IOException {
+    next(false);
+  }
+  
+	private void next(boolean noPop) throws IOException {
 		switch (itemType) {
 		case Object :
 			lexer.consume(TokenType.Open);
@@ -484,7 +541,7 @@ public class JsonTrackingParser {
 		case Number: 
 		case End: 
 		case Boolean :
-			if (itemType == ItemType.End)
+			if (itemType == ItemType.End && !noPop)
 				lexer.states.pop();
 			if (lexer.getType() == TokenType.Comma) {
 				lexer.next();
@@ -553,4 +610,14 @@ public class JsonTrackingParser {
 			throw lexer.error("not done yet (b): "+lexer.getType().toString());
 		}
 	}
+
+  public boolean isErrorOnDuplicates() {
+    return errorOnDuplicates;
+  }
+
+  public void setErrorOnDuplicates(boolean errorOnDuplicates) {
+    this.errorOnDuplicates = errorOnDuplicates;
+  }
+	
+	
 }

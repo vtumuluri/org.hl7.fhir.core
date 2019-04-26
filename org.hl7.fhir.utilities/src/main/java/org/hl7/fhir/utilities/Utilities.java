@@ -324,8 +324,9 @@ public class Utilities {
 //	  }
   }
 
-  public static void createDirectory(String path) throws IOException{
-    new CSFile(path).mkdirs();    
+  public static File createDirectory(String path) throws IOException{
+    new CSFile(path).mkdirs();
+    return new File(path);
   }
 
   public static String changeFileExt(String name, String ext) {
@@ -831,6 +832,10 @@ public class Utilities {
   }
 
 
+  public static String makeUuidLC() {
+    return UUID.randomUUID().toString().toLowerCase();
+  }
+
   public static String makeUuidUrn() {
     return "urn:uuid:"+UUID.randomUUID().toString().toLowerCase();
   }
@@ -1164,6 +1169,7 @@ public class Utilities {
   public static boolean isValidId(String id) {
     return id.matches("[A-Za-z0-9\\-\\.]{1,64}");
   }
+
 
 
 }

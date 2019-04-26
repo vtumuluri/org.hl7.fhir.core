@@ -36,12 +36,23 @@ public class BaseWriter {
   }
 
   protected JsonArray forceArray(String arrayName) {
-    JsonArray arr = object.get(arrayName).getAsJsonArray();
+    JsonArray arr = object.getAsJsonArray(arrayName);
     if (arr == null) {
       arr = new JsonArray();
       object.add(arrayName, arr);
     }
     return arr;
+  }
+  
+  protected JsonObject forceArrayObject(String arrayName) {
+    JsonArray arr = object.getAsJsonArray(arrayName);
+    if (arr == null) {
+      arr = new JsonArray();
+      object.add(arrayName, arr);
+    }
+    JsonObject obj = new JsonObject();
+    arr.add(obj);
+    return obj;
   }
   
 
