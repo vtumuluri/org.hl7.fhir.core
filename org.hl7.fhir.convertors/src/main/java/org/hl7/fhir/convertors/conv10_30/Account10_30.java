@@ -1,6 +1,8 @@
 package org.hl7.fhir.convertors.conv10_30;
 
 import org.hl7.fhir.convertors.VersionConvertor_10_30;
+import AccountStatus;
+import org.hl7.fhir.dstu2.model.AccountEnum.AccountStatusEnumFactory;
 import org.hl7.fhir.exceptions.FHIRException;
 
 public class Account10_30 {
@@ -55,7 +57,7 @@ public class Account10_30 {
         return tgt;
     }
 
-    static public org.hl7.fhir.dstu3.model.Enumeration<org.hl7.fhir.dstu3.model.Account.AccountStatus> convertAccountStatus(org.hl7.fhir.dstu2.model.Enumeration<org.hl7.fhir.dstu2.model.Account.AccountStatus> src) throws FHIRException {
+    static public org.hl7.fhir.dstu3.model.Enumeration<org.hl7.fhir.dstu3.model.Account.AccountStatus> convertAccountStatus(org.hl7.fhir.dstu2.model.Enumeration<AccountStatus> src) throws FHIRException {
         if (src == null || src.isEmpty())
             return null;
         org.hl7.fhir.dstu3.model.Enumeration<org.hl7.fhir.dstu3.model.Account.AccountStatus> tgt = new org.hl7.fhir.dstu3.model.Enumeration<>(new org.hl7.fhir.dstu3.model.Account.AccountStatusEnumFactory());
@@ -74,20 +76,20 @@ public class Account10_30 {
         return tgt;
     }
 
-    static public org.hl7.fhir.dstu2.model.Enumeration<org.hl7.fhir.dstu2.model.Account.AccountStatus> convertAccountStatus(org.hl7.fhir.dstu3.model.Enumeration<org.hl7.fhir.dstu3.model.Account.AccountStatus> src) throws FHIRException {
+    static public org.hl7.fhir.dstu2.model.Enumeration<AccountStatus> convertAccountStatus(org.hl7.fhir.dstu3.model.Enumeration<org.hl7.fhir.dstu3.model.Account.AccountStatus> src) throws FHIRException {
         if (src == null || src.isEmpty())
             return null;
-        org.hl7.fhir.dstu2.model.Enumeration<org.hl7.fhir.dstu2.model.Account.AccountStatus> tgt = new org.hl7.fhir.dstu2.model.Enumeration<>(new org.hl7.fhir.dstu2.model.Account.AccountStatusEnumFactory());
+        org.hl7.fhir.dstu2.model.Enumeration<AccountStatus> tgt = new org.hl7.fhir.dstu2.model.Enumeration<>(new AccountStatusEnumFactory());
         VersionConvertor_10_30.copyElement(src, tgt);
         switch(src.getValue()) {
             case ACTIVE:
-                tgt.setValue(org.hl7.fhir.dstu2.model.Account.AccountStatus.ACTIVE);
+                tgt.setValue(AccountStatus.ACTIVE);
                 break;
             case INACTIVE:
-                tgt.setValue(org.hl7.fhir.dstu2.model.Account.AccountStatus.INACTIVE);
+                tgt.setValue(AccountStatus.INACTIVE);
                 break;
             default:
-                tgt.setValue(org.hl7.fhir.dstu2.model.Account.AccountStatus.NULL);
+                tgt.setValue(AccountStatus.NULL);
                 break;
         }
         return tgt;

@@ -47,6 +47,13 @@
             </snapshots>
         </repository>
         <repository>
+            <id>google.com</id>
+            <url>https://maven.google.com/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
             <id>oss-snapshot</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
             <snapshots>
@@ -128,6 +135,7 @@
         <module>org.hl7.fhir.convertors</module>
         <module>org.hl7.fhir.validation</module>
         <module>org.hl7.fhir.validation.cli</module>
+        <module>org.hl7.fhir.android</module>
     </modules>
 
     <build>

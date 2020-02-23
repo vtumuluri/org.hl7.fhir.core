@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+        <modelVersion>4.0.0</modelVersion>
+
+        <parent>
+            <groupId>ca.uhn.hapi.fhir</groupId>
+            <artifactId>org.hl7.fhir.core</artifactId>
+            <version>4.2.1-SNAPSHOT</version>
+            <relativePath>../pom.xml</relativePath>
+        </parent>
+
+        <artifactId>org.hl7.fhir.android</artifactId>
+        <packaging>bundle</packaging>
+
+        <dependencies>
+
+            <!-- HAPI Dependencies -->
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>hapi-fhir-base</artifactId>
+            </dependency>
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>org.hl7.fhir.utilities</artifactId>
+            </dependency>
+
+            <!-- FHIR Versions -->
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>org.hl7.fhir.dstu2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>org.hl7.fhir.dstu2016may</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>org.hl7.fhir.dstu3</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>org.hl7.fhir.r4</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ca.uhn.hapi.fhir</groupId>
+                <artifactId>org.hl7.fhir.r5</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
+            <!-- UCUM -->
+            <dependency>
+                <groupId>org.fhir</groupId>
+                <artifactId>ucum</artifactId>
+                <version>1.0.2</version>
+                <optional>true</optional>
+            </dependency>
+
+            <!-- JAVA PARSER -->
+            <dependency>
+                <groupId>com.github.javaparser</groupId>
+                <artifactId>javaparser-symbol-solver-core</artifactId>
+                <version>3.15.9</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>28.2-jre</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
+            <dependency>
+                <groupId>com.google.code.gson</groupId>
+                <artifactId>gson</artifactId>
+                <version>2.8.6</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/androidx.room/room-runtime -->
+            <dependency>
+                <groupId>androidx.room</groupId>
+                <artifactId>room-runtime</artifactId>
+                <version>2.2.4</version>
+            </dependency>
+
+            <!-- JUNIT JUPITER -->
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>RELEASE</version>
+                <scope>test</scope>
+            </dependency>
+
+        </dependencies>
+
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.basepom.maven</groupId>
+                    <artifactId>duplicate-finder-maven-plugin</artifactId>
+                    <configuration>
+                        <skip>true</skip>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+
+    </project>
