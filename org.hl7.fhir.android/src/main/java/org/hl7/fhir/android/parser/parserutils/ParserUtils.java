@@ -61,7 +61,9 @@ public class ParserUtils {
     if (classByName.isPresent()) {
       return classByName.get();
     } else {
-      return null;
+      // Check interface
+      classByName = cu.getInterfaceByName(classname);
+      return classByName.orElse(null);
     }
   }
 
@@ -74,7 +76,7 @@ public class ParserUtils {
   public static CompilationUnit getCompilationUnit(String filePathWithExtension) {
     Optional<CompilationUnit> compilationUnit = initializeParser(filePathWithExtension);
     if (!compilationUnit.isPresent()) {
-      System.out.println("\nNo compilation unit generated during class parsing...aborting.");
+      System.out.println("\nCannot find compilation unit at <" + filePathWithExtension + ">\nNo compilation unit generated during class parsing...aborting.");
       System.exit(0);
     }
     return compilationUnit.get();
@@ -109,8 +111,8 @@ public class ParserUtils {
 
     ClassOrInterfaceDeclaration classOrInterfaceDeclaration = loadClass(compilationUnit, filename);
     if (classOrInterfaceDeclaration == null) {
-      System.out.println("\nNo class or interface declaration loaded during parsing...aborting.");
-      System.exit(0);
+      System.out.println("\nCannot find filename <" + filename + ">\nNo class or interface declaration loaded during parsing...aborting.");
+      return null;
     }
     return classOrInterfaceDeclaration;
   }

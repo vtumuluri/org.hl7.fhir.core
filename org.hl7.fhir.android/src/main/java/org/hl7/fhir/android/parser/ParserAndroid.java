@@ -93,8 +93,12 @@ public class ParserAndroid {
     String projectDirectory = new File("").getAbsolutePath();
     String filePathWithExtension = projectDirectory + srcdirectory + filename + extension;
     CompilationUnit topLevelCompilationUnit = ParserUtils.getCompilationUnit(filePathWithExtension);
+    if (topLevelCompilationUnit == null) return;
+
     ClassOrInterfaceDeclaration classOrInterfaceDeclaration = ParserUtils.initializeTypeSovlerAndParser(topLevelCompilationUnit,
       projectDirectory, filename);
+    if (classOrInterfaceDeclaration == null) return;
+    //TODO have to deal with ResourceType class here
 
     EnumUtils.extractEnumClasses(topLevelCompilationUnit, classOrInterfaceDeclaration, destDir, fhirVersion);
 

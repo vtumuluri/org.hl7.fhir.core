@@ -26,6 +26,7 @@ public class FileUtils {
       walk.map(Path::toString)
         .filter(f -> f.endsWith(".java"))
         .map(FileUtils::pullFileNameFromPath)
+        .sorted()
         .collect(Collectors.toCollection(() -> result));
     } catch (IOException e) {
       e.printStackTrace();
