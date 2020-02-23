@@ -100,6 +100,7 @@ public class ParserAndroid {
     if (classOrInterfaceDeclaration == null) return;
     //TODO have to deal with ResourceType class here
 
+    //
     EnumUtils.extractEnumClasses(topLevelCompilationUnit, classOrInterfaceDeclaration, destDir, fhirVersion);
 
     FileUtils.writeStringToFile(topLevelCompilationUnit.toString(), projectDirectory + String.format(MODEL_DEST_DIR, fhirVersion) + filename + ".java");
