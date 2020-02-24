@@ -28,12 +28,12 @@ public class EnumUtils {
   public static final String PACKAGE_DECLARATION_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
   public static final String PACKAGE_DECLARATION_ENUM_CLASS = PACKAGE_DECLARATION_BASE_CLASS + ".%2$sEnum";
   public static final String PACKAGE_DECLARATION_ENUM_FACTORY_CLASS = PACKAGE_DECLARATION_BASE_CLASS + ".%2$sEnum";
-  public static final String IMPORT_BASE = "org.hl7.fhir.%1$s.model.Base";
-  public static final String IMPORT_ENUM_FACTORY = "org.hl7.fhir.%1$s.model.EnumFactory";
-  public static final String IMPORT_ENUMERATION = "org.hl7.fhir.%1$s.model.Enumeration";
-  public static final String IMPORT_PRIMITIVE_TYPE = "org.hl7.fhir.%1$s.model.PrimitiveType";
   public static final String IMPORT_GENERATED_ENUM = "org.hl7.fhir.android.generated.%1$s.%2$sEnum.%3$s";
   public static final String IMPORT_FHIR_EXCEPTION = "org.hl7.fhir.exceptions.FHIRException";
+  public static final String IMPORT_FHIR_BASE = "org.hl7.fhir.android.generated.%1$s.Base";
+  public static final String IMPORT_FHIR_ENUM_FACTORY = "org.hl7.fhir.android.generated.%1$s.EnumFactory";
+  public static final String IMPORT_FHIR_ENUMERATION = "org.hl7.fhir.android.generated.%1$s.Enumeration";
+  public static final String IMPORT_FHIR_PRIMITIVE_TYPE = "org.hl7.fhir.android.generated.%1$s.PrimitiveType";
 
   /*
    * %1$s - Name of the base resource class the enum was extracted from. ie: Account, Patient, Observation
@@ -45,10 +45,11 @@ public class EnumUtils {
    */
   public static final String ENUM_FACTORY_NAME_FORMAT = "%1$sEnumFactory";
 
-  public static final List<String> BASE_RESOURCE_CLASS_ADDITIONAL_IMPORTS = Arrays.asList(BASE_CLASS_ENUM_IMPORT, BASE_CLASS_ENUM_FACTORY_IMPORT);
+  public static final List<String> BASE_RESOURCE_CLASS_ADDITIONAL_IMPORTS = Arrays.asList(BASE_CLASS_ENUM_IMPORT,
+    BASE_CLASS_ENUM_FACTORY_IMPORT);
   public static final List<String> GENERATED_ENUM_IMPORT_LIST = Arrays.asList(IMPORT_FHIR_EXCEPTION);
-  public static final List<String> GENERATED_ENUM_FACTORY_IMPORT_LIST = Arrays.asList(IMPORT_BASE,
-    IMPORT_ENUM_FACTORY, IMPORT_ENUMERATION, IMPORT_PRIMITIVE_TYPE, IMPORT_GENERATED_ENUM, IMPORT_FHIR_EXCEPTION);
+  public static final List<String> GENERATED_ENUM_FACTORY_IMPORT_LIST = Arrays.asList(IMPORT_FHIR_BASE,
+    IMPORT_FHIR_ENUM_FACTORY, IMPORT_FHIR_ENUMERATION, IMPORT_FHIR_PRIMITIVE_TYPE, IMPORT_GENERATED_ENUM, IMPORT_FHIR_EXCEPTION);
 
   /**
    * Searched the passed in {@link ClassOrInterfaceDeclaration} for all Enum classes and extracts them into a new java
@@ -76,9 +77,7 @@ public class EnumUtils {
           baseCompilationUnit.addImport(String.format(i, fhirVersion, c.getNameAsString(), e.getNameAsString()));
         });
       }
-
     }
-
   }
 
   /**
@@ -129,6 +128,7 @@ public class EnumUtils {
   public static void generateEnumClass(ClassOrInterfaceDeclaration c, String fhirVersion, String targetDirectory, EnumDeclaration e) throws IOException {
     CompilationUnit compilationUnit = new CompilationUnit();
     ParserUtils.copyEnumDeclaration(e, compilationUnit.addEnum(e.getNameAsString()));
+    compilationUnit.setImports(new NodeList<>());
     compilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_ENUM_CLASS, fhirVersion, c.getName()));
     GENERATED_ENUM_IMPORT_LIST.forEach(i -> {
       compilationUnit.addImport(String.format(i, fhirVersion));
