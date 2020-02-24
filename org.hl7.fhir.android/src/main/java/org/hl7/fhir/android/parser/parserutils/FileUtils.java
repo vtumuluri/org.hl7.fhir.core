@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -44,6 +45,37 @@ public class FileUtils {
     int lastSlashIndex = path.lastIndexOf('/');
     int lastPeriodIndex = path.lastIndexOf('.');
     return path.substring(lastSlashIndex + 1, lastPeriodIndex);
+  }
+
+  /**
+   * Takes the passed in file path and extracts the filename with extension.
+   *
+   * @param path
+   * @return
+   */
+  protected static String pullFileWithExtensionFromPath(String path) {
+    int lastSlashIndex = path.lastIndexOf('/');
+    return path.substring(lastSlashIndex + 1);
+  }
+
+  /**
+   * This method will check for the dot ‘.' occurrence in the given filename.
+   *
+   * If it exists, then it will find the last position of the dot ‘.' and return the characters after that, the
+   * characters after the last dot ‘.' known as the file extension.
+   *
+   * Special Cases:
+   *
+   * No extension – this method will return an empty String
+   * Only extension – this method will return the String after the dot, e.g. “gitignore”
+   *
+   * @param filename Filename with extension
+   * @return {@link String} extension of file. eg ".java"
+   */
+  public Optional<String> getExtensionByStringHandling(String filename) {
+    return Optional.ofNullable(filename)
+      .filter(f -> f.contains("."))
+      .map(f -> f.substring(filename.lastIndexOf(".") + 1));
   }
 
   /**

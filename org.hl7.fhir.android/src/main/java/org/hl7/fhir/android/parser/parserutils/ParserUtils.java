@@ -5,6 +5,7 @@ import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.model.resolution.TypeSolver;
@@ -56,14 +57,52 @@ public class ParserUtils {
    * @param classname {@link String} The name of the class to load.
    * @return {@link ClassOrInterfaceDeclaration} for the named class.
    */
-  protected static ClassOrInterfaceDeclaration loadClass(CompilationUnit cu, String classname) {
+  public static ClassOrInterfaceDeclaration loadClass(CompilationUnit cu, String classname) {
     Optional<ClassOrInterfaceDeclaration> classByName = cu.getClassByName(classname);
-    if (classByName.isPresent()) {
-      return classByName.get();
+    if (!classByName.isPresent()) {
+      System.out.println("\nCannot find classname <" + classname + ">\nNo class declaration loaded during parsing...aborting.");
+      System.exit(0);
+      return null;
     } else {
-      // Check interface
-      classByName = cu.getInterfaceByName(classname);
-      return classByName.orElse(null);
+      return classByName.get();
+    }
+  }
+
+  /**
+   * Loads a class using the {@link CompilationUnit} passed in and returns the resulting declaration for parsing. This
+   * class must exist within the directory parsed originally in {@link #initializeParser(String)}
+   *
+   * @param cu        {@link CompilationUnit}
+   * @param enumName {@link String} The name of the enum to load.
+   * @return {@link EnumDeclaration} for the named enum.
+   */
+  public static EnumDeclaration loadEnum(CompilationUnit cu, String enumName) {
+    Optional<EnumDeclaration> enumByName = cu.getEnumByName(enumName);
+    if (!enumByName.isPresent()) {
+      System.out.println("\nCannot find enum <" + enumName + ">\nNo class declaration loaded during parsing...aborting.");
+      System.exit(0);
+      return null;
+    } else {
+      return enumByName.get();
+    }
+  }
+
+  /**
+   * Loads a class using the {@link CompilationUnit} passed in and returns the resulting declaration for parsing. This
+   * class must exist within the directory parsed originally in {@link #initializeParser(String)}
+   *
+   * @param cu        {@link CompilationUnit}
+   * @param interfaceName {@link String} The name of the interface to load.
+   * @return {@link ClassOrInterfaceDeclaration} for the named interface.
+   */
+  public static ClassOrInterfaceDeclaration loadInterface(CompilationUnit cu, String interfaceName) {
+    Optional<ClassOrInterfaceDeclaration> interfaceByName = cu.getInterfaceByName(interfaceName);
+    if (!interfaceByName.isPresent()) {
+      System.out.println("\nCannot find interface <" + interfaceByName + ">\nNo interface loaded during parsing...aborting.");
+      System.exit(0);
+      return null;
+    } else {
+      return interfaceByName.get();
     }
   }
 
@@ -98,23 +137,24 @@ public class ParserUtils {
     return Optional.ofNullable(compilationUnit);
   }
 
-  public static ClassOrInterfaceDeclaration initializeTypeSovlerAndParser(CompilationUnit compilationUnit,
-                                                                          String projectDirectory,
-                                                                          String filename) {
-    try {
-      initializeResolver(projectDirectory);
-    } catch (IOException e) {
-      System.out.println("Error initializing typesolver, exiting process...");
-      e.printStackTrace();
-      System.exit(0);
+  /**
+   * Searched the passed in {@link CompilationUnit} for any TypeDeclaration, and if it exists, returns the declaration
+   * type of the named type declaration.
+   * @param compilationUnit {@link CompilationUnit}
+   * @param name {@link String}
+   * @return {@link Type}
+   */
+  public static Type getFileType(CompilationUnit compilationUnit,
+                                 String name) {
+    if (compilationUnit.getInterfaceByName(name).isPresent()) {
+      return Type.INTERFACE;
+    } else if (compilationUnit.getClassByName(name).isPresent()) {
+      return Type.CLASS;
+    } else if (compilationUnit.getEnumByName(name).isPresent()) {
+      return Type.ENUM;
+    } else {
+      return Type.UNKNOWN;
     }
-
-    ClassOrInterfaceDeclaration classOrInterfaceDeclaration = loadClass(compilationUnit, filename);
-    if (classOrInterfaceDeclaration == null) {
-      System.out.println("\nCannot find filename <" + filename + ">\nNo class or interface declaration loaded during parsing...aborting.");
-      return null;
-    }
-    return classOrInterfaceDeclaration;
   }
 
   /**

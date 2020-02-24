@@ -51,13 +51,18 @@ public class EnumUtils {
   public static final List<String> GENERATED_ENUM_FACTORY_IMPORT_LIST = Arrays.asList(IMPORT_FHIR_BASE,
     IMPORT_FHIR_ENUM_FACTORY, IMPORT_FHIR_ENUMERATION, IMPORT_FHIR_PRIMITIVE_TYPE, IMPORT_GENERATED_ENUM, IMPORT_FHIR_EXCEPTION);
 
+  public static void extractOuterEnumClasses(String directoryToSearch, String destinationDirectory, String fhirVersion) {
+    List<String> allFiles = FileUtils.listAllJavaFilesInDirectory(directoryToSearch);
+
+  }
+
   /**
    * Searched the passed in {@link ClassOrInterfaceDeclaration} for all Enum classes and extracts them into a new java
    * file. In addition to extracting the found enum files, we also search for the associated EnumFactoryClass
    *
    * @param c The {@link ClassOrInterfaceDeclaration} to search
    */
-  public static void extractEnumClasses(CompilationUnit baseCompilationUnit, ClassOrInterfaceDeclaration c, String destinationDirectory, String fhirVersion) throws IOException {
+  public static void extractInnerEnumClasses(CompilationUnit baseCompilationUnit, ClassOrInterfaceDeclaration c, String destinationDirectory, String fhirVersion) throws IOException {
 
     String projectDirectory = new File("").getAbsolutePath();
 

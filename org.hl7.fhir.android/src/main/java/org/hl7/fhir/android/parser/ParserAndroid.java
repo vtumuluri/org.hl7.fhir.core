@@ -3,10 +3,6 @@ package org.hl7.fhir.android.parser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
-import com.github.javaparser.ast.expr.MethodCallExpr;
-import com.github.javaparser.ast.visitor.ModifierVisitor;
-import com.github.javaparser.ast.visitor.Visitable;
-import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import org.hl7.fhir.android.parser.parserutils.EnumUtils;
 import org.hl7.fhir.android.parser.parserutils.FileUtils;
 import org.hl7.fhir.android.parser.parserutils.ParserUtils;
@@ -27,6 +23,7 @@ public class ParserAndroid {
   public static final String MODEL_SRC_DIR = "/org.hl7.fhir.%1$s/src/main/java/org/hl7/fhir/%1$s/model/";
   public static final String MODEL_GENERATED_DIR = "/org.hl7.fhir.android/src/main/java/org/hl7/fhir/android/generated/";
   public static final String MODEL_DEST_DIR = MODEL_GENERATED_DIR + "%1$s/";
+  public static final String PACKAGE_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
 
   /**
    * For enums, will need TypeConverters, no generic type converter exists, so each enum will need a generated converter
@@ -52,6 +49,13 @@ public class ParserAndroid {
 
     try {
       generateFolderStructure();
+    } catch (IOException e) {
+      e.printStackTrace();
+      System.exit(0);
+    }
+
+    try {
+      ParserUtils.initializeResolver(projectDirectory);
     } catch (IOException e) {
       e.printStackTrace();
       System.exit(0);
@@ -95,13 +99,24 @@ public class ParserAndroid {
     CompilationUnit topLevelCompilationUnit = ParserUtils.getCompilationUnit(filePathWithExtension);
     if (topLevelCompilationUnit == null) return;
 
-    ClassOrInterfaceDeclaration classOrInterfaceDeclaration = ParserUtils.initializeTypeSovlerAndParser(topLevelCompilationUnit,
-      projectDirectory, filename);
-    if (classOrInterfaceDeclaration == null) return;
-    //TODO have to deal with ResourceType class here
+    switch (ParserUtils.getFileType(topLevelCompilationUnit, filename)) {
+      case CLASS:
+        ClassOrInterfaceDeclaration classDeclaration = ParserUtils.loadClass(topLevelCompilationUnit, filename);
+        EnumUtils.extractInnerEnumClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion);
+        break;
+      case ENUM:
+        EnumDeclaration enumDeclaration = ParserUtils.loadEnum(topLevelCompilationUnit, filename);
+        break;
+      case INTERFACE:
+        ClassOrInterfaceDeclaration interfaceDeclaration = ParserUtils.loadInterface(topLevelCompilationUnit, filename);
+        break;
+      case UNKNOWN:
+      default:
+        System.out.println("Unknown declaration type for file <" + filename + ">...exiting");
+        System.exit(0);
+    }
 
-    EnumUtils.extractEnumClasses(topLevelCompilationUnit, classOrInterfaceDeclaration, destDir, fhirVersion);
-
+    topLevelCompilationUnit.setPackageDeclaration(String.format(PACKAGE_BASE_CLASS, fhirVersion));
     FileUtils.writeStringToFile(topLevelCompilationUnit.toString(), projectDirectory + String.format(MODEL_DEST_DIR, fhirVersion) + filename + ".java");
   }
 
