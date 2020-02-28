@@ -177,8 +177,7 @@ public class ParserUtils {
       new JavaParserTypeSolver(new File(rootProjectDirectory + "/org.hl7.fhir.dstu2016may/src/main/java/")),
       new JavaParserTypeSolver(new File(rootProjectDirectory + "/org.hl7.fhir.r4/src/main/java/")),
       new JavaParserTypeSolver(new File(rootProjectDirectory + "/org.hl7.fhir.r5/src/main/java/")),
-      new JavaParserTypeSolver(new File(rootProjectDirectory + "/org.hl7.fhir.validation/src/main/java/")),
-      new JarTypeSolver("/home/mark/.m2/repository/ca/uhn/hapi/fhir/hapi-fhir-structures-r4/4.2.0/hapi-fhir-structures-r4-4.2.0.jar")
+      new JavaParserTypeSolver(new File(rootProjectDirectory + "/org.hl7.fhir.validation/src/main/java/"))
     );
 
     JavaSymbolSolver symbolSolver = new JavaSymbolSolver(myTypeSolver);
