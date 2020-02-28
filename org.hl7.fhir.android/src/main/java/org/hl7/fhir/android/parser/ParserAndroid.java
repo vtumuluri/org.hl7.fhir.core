@@ -3,9 +3,7 @@ package org.hl7.fhir.android.parser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
-import org.hl7.fhir.android.parser.parserutils.EnumUtils;
-import org.hl7.fhir.android.parser.parserutils.FileUtils;
-import org.hl7.fhir.android.parser.parserutils.ParserUtils;
+import org.hl7.fhir.android.parser.utils.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -99,10 +97,14 @@ public class ParserAndroid {
     CompilationUnit topLevelCompilationUnit = ParserUtils.getCompilationUnit(filePathWithExtension);
     if (topLevelCompilationUnit == null) return;
 
+    AnnotationUtils.sanitizeAllClassAnnotations(topLevelCompilationUnit);
+
     switch (ParserUtils.getFileType(topLevelCompilationUnit, filename)) {
       case CLASS:
         ClassOrInterfaceDeclaration classDeclaration = ParserUtils.loadClass(topLevelCompilationUnit, filename);
         EnumUtils.extractInnerEnumClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion);
+        ClassUtils.extractInnerClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion);
+        // pull all nested classes out
         break;
       case ENUM:
         EnumDeclaration enumDeclaration = ParserUtils.loadEnum(topLevelCompilationUnit, filename);
