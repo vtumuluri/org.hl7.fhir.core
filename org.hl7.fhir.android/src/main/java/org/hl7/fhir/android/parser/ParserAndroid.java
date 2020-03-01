@@ -119,7 +119,8 @@ public class ParserAndroid {
     }
 
     topLevelCompilationUnit.setPackageDeclaration(String.format(PACKAGE_BASE_CLASS, fhirVersion));
-    FileUtils.writeStringToFile(topLevelCompilationUnit.toString(), projectDirectory + String.format(MODEL_DEST_DIR, fhirVersion) + filename + ".java");
+    String topLevelClassData = ClassUtils.removeExplicitPackageReferences(topLevelCompilationUnit.toString(), fhirVersion);
+    FileUtils.writeStringToFile(topLevelClassData, projectDirectory + String.format(MODEL_DEST_DIR, fhirVersion) + filename + ".java");
   }
 
 

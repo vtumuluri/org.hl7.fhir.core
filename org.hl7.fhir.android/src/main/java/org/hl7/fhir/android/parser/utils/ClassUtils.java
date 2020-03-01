@@ -16,6 +16,8 @@ import java.util.Set;
 public class ClassUtils {
 
   public static final String PACKAGE_DECLARATION_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
+  public static final String OLD_EXPLICIT_PACKAGE_DEC = "org.hl7.fhir.%1$s.model.";
+  public static final String NEW_EXPLICIT_PACKAGE_DEC = "org.hl7.fhir.android.generated.%1$s.";
 
 
   /**
@@ -29,14 +31,16 @@ public class ClassUtils {
     String projectDirectory = new File("").getAbsolutePath();
 
     Set<ClassOrInterfaceDeclaration> foundClasses = getClassDeclarations(c);
+    final String targetDirectory = projectDirectory + destinationDirectory;
+    String fileContent = baseCompilationUnit.toString();
 
     if (!foundClasses.isEmpty()) {
       // Enums exist within this class, we need to extract them, and their corresponding EnumFactories to separate files
-      final String targetDirectory = projectDirectory + destinationDirectory;
-
       for (ClassOrInterfaceDeclaration dec : foundClasses) {
-        generateClass(baseCompilationUnit, fhirVersion, targetDirectory, dec);
+        fileContent = generateClassString(baseCompilationUnit, fhirVersion, targetDirectory, dec);
         baseCompilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
+        String contentsWithOldPackageRefsRemoved = removeExplicitPackageReferences(fileContent, fhirVersion);
+        FileUtils.writeStringToFile(contentsWithOldPackageRefsRemoved, targetDirectory + "/" + c.getNameAsString() + ".java");
       }
     }
   }
@@ -51,15 +55,28 @@ public class ClassUtils {
    * @param c
    * @throws IOException
    */
-  public static void generateClass(CompilationUnit baseCompilationUnit, String fhirVersion, String targetDirectory, ClassOrInterfaceDeclaration c) throws IOException {
+  public static String generateClassString(CompilationUnit baseCompilationUnit, String fhirVersion, String targetDirectory, ClassOrInterfaceDeclaration c) throws IOException {
     CompilationUnit compilationUnit = new CompilationUnit();
     ClassOrInterfaceDeclaration generatedClass = compilationUnit.addClass(c.getNameAsString());
     ParserUtils.copyClassOrInterfaceDeclaration(c, generatedClass);
     baseCompilationUnit.getImports().forEach(compilationUnit::addImport);
     compilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
     generatedClass.setModifier(Modifier.Keyword.STATIC, false);
-    FileUtils.writeStringToFile(compilationUnit.toString(), targetDirectory + "/" + c.getNameAsString() + ".java");
     c.remove();
+    return compilationUnit.toString();
+  }
+
+  /**
+   * Searches the passes in compilation unit for explicit package references to the old version of the FHIR Model files,
+   * and then removes them. (We shouldn't need to keep them in, as we've flattened the folder structure.
+   *
+   * @param fileContents {@link String} to search.
+   * @param currentFhirVersion {@link String} the current fhir version string we will use to construct the search string. ie
+   *                                  "dstu2" -> org.hl7.fhir.dstu2.model.
+   * @return The resulting String body of the parsed {@link CompilationUnit}
+   */
+  public static String removeExplicitPackageReferences(String fileContents, String currentFhirVersion) {
+    return fileContents.replaceAll(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion), String.format(NEW_EXPLICIT_PACKAGE_DEC, currentFhirVersion));
   }
 
   /**
