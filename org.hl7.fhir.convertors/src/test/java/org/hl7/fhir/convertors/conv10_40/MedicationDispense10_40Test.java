@@ -1,49 +1,47 @@
-package org.hl7.fhir.convertors.conv%1$s;
+package org.hl7.fhir.convertors.conv10_40;
 
-import org.hl7.fhir.convertors.testgenerator.basetests.BaseTest%1$s;
+import org.hl7.fhir.convertors.testgenerator.basetests.BaseTest10_40;
 import org.hl7.fhir.convertors.testgenerator.utils.ResourceUtils;
 import org.hl7.fhir.convertors.testgenerator.utils.ResourceVersion;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-
 import java.io.File;
 import java.io.IOException;
 
 /**
- * %1$s - conversion code ie "10_40"
- * %2$s - resource name ie "Patient"
- * %3$s - low fhir version ie "dstu3"
- * %4$s - high fhir version ie "r5"
- **/
-class %2$s%1$sTest extends BaseTest%1$s {
+ * 10_40 - conversion code ie "10_40" * MedicationDispense - resource name ie "Patient" * dstu2 - low fhir version ie "dstu3" * r4 - high fhir version ie "r5" *
+ */
+class MedicationDispense10_40Test extends BaseTest10_40 {
 
-    protected final static String CLASS_NAME = "%2$s";
-    protected final static ResourceVersion HIGH_FHIR_VERSION = ResourceVersion.fromCode("%4$s");
-    protected final static ResourceVersion LOW_FHIR_VERSION = ResourceVersion.fromCode("%3$s");
+    protected final static String CLASS_NAME = "MedicationDispense";
+
+    protected final static ResourceVersion HIGH_FHIR_VERSION = ResourceVersion.fromCode("r4");
+
+    protected final static ResourceVersion LOW_FHIR_VERSION = ResourceVersion.fromCode("dstu2");
 
     @ParameterizedTest(name = "{index} :: {0}")
-    @DisplayName("Conversion from %3$s -> %4$s -> %3$s")
+    @DisplayName("Conversion from dstu2 -> r4 -> dstu2")
     @MethodSource("dataSourceLow")
     void testConvertFromLowToHigh(String filename, File testFile) throws IOException {
         String beforeJsonString = ResourceUtils.loadStringFromResourceFile(testFile);
-        org.hl7.fhir.%3$s.formats.JsonParser parser = new org.hl7.fhir.%3$s.formats.JsonParser();
-        org.hl7.fhir.%3$s.model.Resource parsedResource = parser.parse(beforeJsonString);
-        org.hl7.fhir.%3$s.model.Resource convertedResource = roundTrip(parsedResource);
+        org.hl7.fhir.dstu2.formats.JsonParser parser = new org.hl7.fhir.dstu2.formats.JsonParser();
+        org.hl7.fhir.dstu2.model.Resource parsedResource = parser.parse(beforeJsonString);
+        org.hl7.fhir.dstu2.model.Resource convertedResource = roundTrip(parsedResource);
         String afterJsonString = parser.composeString(convertedResource);
         displayDifference(beforeJsonString, afterJsonString);
         Assertions.fail();
     }
 
     @ParameterizedTest(name = "{index} :: {0}")
-    @DisplayName("Conversion from %4$s -> %3$s -> %4$s")
+    @DisplayName("Conversion from r4 -> dstu2 -> r4")
     @MethodSource("dataSourceHigh")
     void testConvertFromHighToLow(String filename, File testFile) throws IOException {
         String beforeJsonString = ResourceUtils.loadStringFromResourceFile(testFile);
-        org.hl7.fhir.%4$s.formats.JsonParser parser = new org.hl7.fhir.%4$s.formats.JsonParser();
-        org.hl7.fhir.%4$s.model.Resource parsedResource = parser.parse(beforeJsonString);
-        org.hl7.fhir.%4$s.model.Resource convertedResource = roundTrip(parsedResource);
+        org.hl7.fhir.r4.formats.JsonParser parser = new org.hl7.fhir.r4.formats.JsonParser();
+        org.hl7.fhir.r4.model.Resource parsedResource = parser.parse(beforeJsonString);
+        org.hl7.fhir.r4.model.Resource convertedResource = roundTrip(parsedResource);
         String afterJsonString = parser.composeString(convertedResource);
         displayDifference(beforeJsonString, afterJsonString);
         Assertions.fail();

@@ -1,5 +1,7 @@
 package org.hl7.fhir.convertors.testgenerator;
 
+import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.CompilationUnit;
 import org.hl7.fhir.convertors.testgenerator.utils.FileUtils;
 import org.hl7.fhir.convertors.testgenerator.utils.ResourceUtils;
 
@@ -19,7 +21,7 @@ public class TestGenerator {
 
     public static void main(String[] args) {
         String version = "10_40";
-        String path = new File("").getAbsolutePath() + String.format(FILE_PATH + version);
+        String path = new File("").getAbsolutePath() + String.format(FILE_PATH, version);
 
         List<String> filenames = FileUtils.listAllJavaFilesInDirectory(path);
         filenames.forEach(filename -> {
@@ -43,9 +45,11 @@ public class TestGenerator {
          **/
         String template = ResourceUtils.loadStringFromResourceFile(fileTemplate);
         String filledTemplate = String.format(template, version, FileUtils.removeVersionFromFileName(filename, version), lowFhirVersion, highFhirVersion);
-        String baseDir = new File("").getAbsolutePath();
 
-        FileUtils.writeStringToFile(filledTemplate, baseDir + String.format(TEST_DEST_DIRECTORY, version) + String.format(TEST_FILENAME, filename));
+        String baseDir = new File("").getAbsolutePath();
+        String absPathToFile = baseDir + String.format(TEST_DEST_DIRECTORY, version) + String.format(TEST_FILENAME, filename);
+        CompilationUnit compilationUnit = StaticJavaParser.parse(filledTemplate);
+        FileUtils.writeStringToFile(compilationUnit.toString(), absPathToFile);
         System.out.println();
     }
 

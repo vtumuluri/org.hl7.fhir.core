@@ -51,4 +51,5 @@ public abstract class BaseTest {
         MapDifference<String, Object> difference = JsonComparisonUtils.compareJson(beforeConversion, afterConversion);
         System.out.println(JsonComparisonUtils.getPrettyPrintOutput(difference));
     }
+
 }
