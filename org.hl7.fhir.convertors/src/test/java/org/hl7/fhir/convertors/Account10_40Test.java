@@ -2,7 +2,7 @@ package org.hl7.fhir.convertors;
 
 import org.hl7.fhir.convertors.testgenerator.basetests.BaseTest10_40;
 import org.hl7.fhir.convertors.testgenerator.utils.ResourceUtils;
-import org.hl7.fhir.convertors.testgenerator.utils.ResourceVersion;
+import org.hl7.fhir.convertors.testgenerator.constants.ResourceVersion;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;

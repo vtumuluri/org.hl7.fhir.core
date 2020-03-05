@@ -13,6 +13,14 @@ import java.util.stream.Stream;
 
 public class FileUtils {
 
+    /**
+     * Returns the base filename without the conversion version suffix at the end.
+     * eg. Account10_30 -> Account
+     *
+     * @param filename Filename with suffix, as {@link String}
+     * @param version Verion suffix to remove.
+     * @return Base filename as {   @link String}
+     */
     public static String removeVersionFromFileName(String filename, String version) {
         return (filename.replace(version, ""));
     }

@@ -5,7 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import org.hl7.fhir.convertors.testgenerator.utils.JsonComparisonUtils;
 import org.hl7.fhir.convertors.testgenerator.utils.ResourceUtils;
-import org.hl7.fhir.convertors.testgenerator.utils.ResourceVersion;
+import org.hl7.fhir.convertors.testgenerator.constants.ResourceVersion;
 import org.junit.jupiter.api.TestInstance;
 
 import java.io.File;

@@ -1,13 +1,12 @@
 package org.hl7.fhir.convertors.testgenerator.utils;
 
-import com.google.gson.*;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
-import java.net.URL;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,7 +55,7 @@ public class ResourceUtils {
     /**
      * Loads the string data from the file at the given resource path.
      *
-     * @param resourcePath Path location for the resource file to read in.
+     * @param file Path location for the resource file to read in.
      * @return {@link String} of the file contents.
      * @throws IOException if no such file exists at the given path.
      */
@@ -75,12 +74,11 @@ public class ResourceUtils {
     }
 
     /**
-     * Parses the passed in JSON {@link String} and returns the name of the primitive with the label {@link ParsingUtils#RESOURCE_TYPE}
+     * Parses the passed in JSON {@link String} and returns the name of the primitive with the label removed
      * in the resulting {@link JsonObject}, which for our purposes, is the name of the FHIR resource.
      *
-     * @param resourceAsString {@link String} resource.
+     * @param parsedObject {@link JsonObject} resource.
      * @return {@link String} name of the resource, eg. "Patient", "Bundle", "Group"
-     *
      * @throws JsonSyntaxException
      */
     protected static String getResourceNameFromJSON(JsonObject parsedObject) throws JsonSyntaxException {

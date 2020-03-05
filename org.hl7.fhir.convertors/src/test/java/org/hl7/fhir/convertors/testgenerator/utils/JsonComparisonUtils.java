@@ -28,4 +28,7 @@ public class JsonComparisonUtils {
         return sb.toString();
     }
 
+    public static int getTotalDifferenceCount(MapDifference<String, Object> difference) {
+        return difference.entriesOnlyOnLeft().size() + difference.entriesOnlyOnRight().size() + difference.entriesDiffering().size();
+    }
 }
