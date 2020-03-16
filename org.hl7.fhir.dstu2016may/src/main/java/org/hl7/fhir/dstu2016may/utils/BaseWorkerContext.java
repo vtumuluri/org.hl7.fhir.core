@@ -23,11 +23,15 @@ package org.hl7.fhir.dstu2016may.utils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
+import java.util.ResourceBundle;
 import java.util.Set;
 
 import org.hl7.fhir.dstu2016may.model.BooleanType;
@@ -57,8 +61,9 @@ import org.hl7.fhir.dstu2016may.terminologies.ValueSetExpansionCache;
 import org.hl7.fhir.dstu2016may.utils.client.FHIRToolingClient;
 import org.hl7.fhir.utilities.CommaSeparatedStringBuilder;
 import org.hl7.fhir.utilities.Utilities;
+import org.hl7.fhir.utilities.i18n.I18nBase;
 
-public abstract class BaseWorkerContext implements IWorkerContext {
+public abstract class BaseWorkerContext extends I18nBase implements IWorkerContext {
 
   // all maps are to the full URI
   protected Map<String, CodeSystem> codeSystems = new HashMap<String, CodeSystem>();
@@ -75,6 +80,8 @@ public abstract class BaseWorkerContext implements IWorkerContext {
 
   protected FHIRToolingClient txServer;
   private Bundle bndCodeSystems;
+  private Locale locale;
+  private ResourceBundle i18Nmessages;
 
   @Override
   public CodeSystem fetchCodeSystem(String system) {
@@ -440,6 +447,4 @@ public abstract class BaseWorkerContext implements IWorkerContext {
   public StructureDefinition fetchTypeDefinition(String typeName) {
     return fetchResource(StructureDefinition.class, "http://hl7.org/fhir/StructureDefinition/"+typeName);
   }
-
-  
 }
