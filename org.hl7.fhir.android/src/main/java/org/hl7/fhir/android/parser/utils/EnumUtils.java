@@ -8,6 +8,7 @@ import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.visitor.ModifierVisitor;
 import com.github.javaparser.ast.visitor.Visitable;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
+import javafx.util.Pair;
 
 import java.io.File;
 import java.io.IOException;
@@ -54,7 +55,9 @@ public class EnumUtils {
    *
    * @param c The {@link ClassOrInterfaceDeclaration} to search
    */
-  public static void extractInnerEnumClasses(CompilationUnit baseCompilationUnit, ClassOrInterfaceDeclaration c, String destinationDirectory, String fhirVersion) throws IOException {
+  public static void extractInnerEnumClasses(CompilationUnit baseCompilationUnit, ClassOrInterfaceDeclaration c,
+                                             String destinationDirectory, String fhirVersion,
+                                             Map<File, CompilationUnit> generatedClassMap) throws IOException {
 
     String projectDirectory = new File("").getAbsolutePath();
 
@@ -66,8 +69,10 @@ public class EnumUtils {
       FileUtils.createDirectory(targetDirectory);
 
       for (EnumDeclaration e : foundEnums) {
-        generateEnumClass(c, fhirVersion, targetDirectory, e);
-        generateEnumFactoryClass(c, fhirVersion, targetDirectory, e, c.getNameAsString());
+        Pair<File, CompilationUnit> enumPair = generateEnumClass(c, fhirVersion, targetDirectory, e);
+        generatedClassMap.put(enumPair.getKey(), enumPair.getValue());
+        Pair<File, CompilationUnit> factoryPair = generateEnumFactoryClass(c, fhirVersion, targetDirectory, e, c.getNameAsString());
+        if (factoryPair != null) generatedClassMap.put(factoryPair.getKey(), factoryPair.getValue());
 
         baseCompilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
         BASE_RESOURCE_CLASS_ADDITIONAL_IMPORTS.forEach(i -> {
@@ -85,7 +90,7 @@ public class EnumUtils {
    * @param fhirVersion
    * @param e
    */
-  public static void generateEnumFactoryClass(ClassOrInterfaceDeclaration c, String fhirVersion, String targetDirectory, EnumDeclaration e, String parentClassName) throws IOException {
+  public static Pair<File, CompilationUnit> generateEnumFactoryClass(ClassOrInterfaceDeclaration c, String fhirVersion, String targetDirectory, EnumDeclaration e, String parentClassName) {
     List<ClassOrInterfaceDeclaration> collect = new ArrayList<>();
 
     c.accept(new VoidVisitorAdapter<List<ClassOrInterfaceDeclaration>>() {
@@ -98,17 +103,23 @@ public class EnumUtils {
       }
     }, collect);
 
-    for (ClassOrInterfaceDeclaration classOrInterfaceDeclaration : collect) {
+    if (!collect.isEmpty()) {
+      // There should be only one here. *lightening strikes, quickening occurs*
+      ClassOrInterfaceDeclaration foundEnumFactory = collect.get(0);
+
       CompilationUnit compilationUnit = new CompilationUnit();
       ClassOrInterfaceDeclaration generatedEnumFactory = compilationUnit.addClass(String.format(ENUM_FACTORY_NAME_FORMAT, e.getNameAsString()));
-      ParserUtils.copyClassOrInterfaceDeclaration(classOrInterfaceDeclaration, generatedEnumFactory);
+      ParserUtils.copyClassOrInterfaceDeclaration(foundEnumFactory, generatedEnumFactory);
       generatedEnumFactory.setModifier(Modifier.Keyword.STATIC, false);
       compilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_ENUM_FACTORY_CLASS, fhirVersion, parentClassName));
       GENERATED_ENUM_FACTORY_IMPORT_LIST.forEach(i -> {
         compilationUnit.addImport(String.format(i, fhirVersion, c.getNameAsString(), e.getNameAsString()));
       });
-      FileUtils.writeStringToFile(compilationUnit.toString(), targetDirectory + "/" + classOrInterfaceDeclaration.getNameAsString() + ".java");
-      classOrInterfaceDeclaration.remove();
+
+      foundEnumFactory.remove();
+      return new Pair<>(new File(targetDirectory + "/" + foundEnumFactory.getNameAsString() + ".java"), compilationUnit);
+    } else {
+      return null;
     }
   }
 
@@ -122,7 +133,7 @@ public class EnumUtils {
    * @param e
    * @throws IOException
    */
-  public static void generateEnumClass(ClassOrInterfaceDeclaration parentClass, String fhirVersion, String targetDirectory, EnumDeclaration e) throws IOException {
+  public static Pair<File, CompilationUnit> generateEnumClass(ClassOrInterfaceDeclaration parentClass, String fhirVersion, String targetDirectory, EnumDeclaration e) {
     CompilationUnit compilationUnit = new CompilationUnit();
     ParserUtils.copyEnumDeclaration(e, compilationUnit.addEnum(e.getNameAsString()));
     compilationUnit.setImports(new NodeList<>());
@@ -130,8 +141,10 @@ public class EnumUtils {
     GENERATED_ENUM_IMPORT_LIST.forEach(i -> {
       compilationUnit.addImport(String.format(i, fhirVersion));
     });
-    FileUtils.writeStringToFile(compilationUnit.toString(), targetDirectory + "/" + e.getNameAsString() + ".java");
+    // Remove the enum from the original compilation unit
     e.remove();
+    // Return our new pair or the desired File to create and the contents and a compilation unit
+    return new Pair<>(new File(targetDirectory + "/" + e.getNameAsString() + ".java"), compilationUnit);
   }
 
 

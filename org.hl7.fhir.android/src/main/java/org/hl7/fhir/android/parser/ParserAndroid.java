@@ -8,7 +8,9 @@ import org.hl7.fhir.android.parser.utils.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ParserAndroid {
 
@@ -22,6 +24,8 @@ public class ParserAndroid {
   public static final String MODEL_GENERATED_DIR = "/org.hl7.fhir.android/src/main/java/org/hl7/fhir/android/generated/";
   public static final String MODEL_DEST_DIR = MODEL_GENERATED_DIR + "%1$s/";
   public static final String PACKAGE_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
+
+  public static final Map<File, CompilationUnit> mGeneratedClassMap = new HashMap<>();
 
   /**
    * For enums, will need TypeConverters, no generic type converter exists, so each enum will need a generated converter
@@ -63,17 +67,20 @@ public class ParserAndroid {
 
     resourceList.forEach(name -> {
       try {
-        createRoomFiles(String.format(MODEL_SRC_DIR, "dstu2"), name, ".java", String.format(MODEL_DEST_DIR, "dstu2"), "dstu2");
+        addToGeneratedClassMap(String.format(MODEL_SRC_DIR, "dstu2"), name, ".java", String.format(MODEL_DEST_DIR, "dstu2"), "dstu2", mGeneratedClassMap);
       } catch (IOException e) {
         e.printStackTrace();
       }
     });
 
-//    try {
-//      createRoomFiles(String.format(MODEL_SRC_DIR, "dstu2"), "Account", ".java", String.format(MODEL_DEST_DIR, "dstu2"), "dstu2");
-//    } catch (IOException e) {
-//      e.printStackTrace();
-//    }
+    mGeneratedClassMap.keySet().forEach(key -> {
+      try {
+        FileUtils.writeDataToFile(key, mGeneratedClassMap.get(key));
+      } catch (IOException e) {
+        System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());;
+      }
+    });
+
   }
 
   /**
@@ -91,19 +98,17 @@ public class ParserAndroid {
     });
   }
 
-  public static void createRoomFiles(String srcdirectory, String filename, String extension, String destDir, String fhirVersion) throws IOException {
+  public static void addToGeneratedClassMap(String srcdirectory, String filename, String extension, String destDir, String fhirVersion, Map<File, CompilationUnit> generatedClassMap) throws IOException {
     String projectDirectory = new File("").getAbsolutePath();
     String filePathWithExtension = projectDirectory + srcdirectory + filename + extension;
     CompilationUnit topLevelCompilationUnit = ParserUtils.getCompilationUnit(filePathWithExtension);
-    if (topLevelCompilationUnit == null) return;
-
     AnnotationUtils.sanitizeAllClassAnnotations(topLevelCompilationUnit);
 
     switch (ParserUtils.getFileType(topLevelCompilationUnit, filename)) {
       case CLASS:
         ClassOrInterfaceDeclaration classDeclaration = ParserUtils.loadClass(topLevelCompilationUnit, filename);
-        EnumUtils.extractInnerEnumClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion);
-        ClassUtils.extractInnerClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion);
+        EnumUtils.extractInnerEnumClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion, generatedClassMap);
+        ClassUtils.extractInnerClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion, generatedClassMap);
         // pull all nested classes out
         break;
       case ENUM:
@@ -119,8 +124,8 @@ public class ParserAndroid {
     }
 
     topLevelCompilationUnit.setPackageDeclaration(String.format(PACKAGE_BASE_CLASS, fhirVersion));
-    String topLevelClassData = ClassUtils.removeExplicitPackageReferences(topLevelCompilationUnit.toString(), fhirVersion);
-    FileUtils.writeStringToFile(topLevelClassData, projectDirectory + String.format(MODEL_DEST_DIR, fhirVersion) + filename + ".java");
+    ClassUtils.removeExplicitPackageReferences(topLevelCompilationUnit, fhirVersion);
+    FileUtils.writeDataToFile(new File(projectDirectory + String.format(MODEL_DEST_DIR, fhirVersion) + filename + ".java"), topLevelCompilationUnit);
   }
 
 

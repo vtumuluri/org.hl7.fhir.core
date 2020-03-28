@@ -1,5 +1,7 @@
 package org.hl7.fhir.android.parser.utils;
 
+import com.github.javaparser.ast.CompilationUnit;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -81,21 +83,20 @@ public class FileUtils {
   /**
    * Writes the passed in String to the file at the given filepath.
    *
-   * @param string   File content to write
-   * @param filepath Absolute path to the file
+   * @param file   File to write to
+   * @param content {@link CompilationUnit} to write to file
    * @throws IOException
    */
-  public static void writeStringToFile(String string, String filepath) throws IOException {
-    File f = new File(filepath);
-    if (!f.exists()) {
+  public static void writeDataToFile(File file, CompilationUnit content) throws IOException {
+    if (!file.exists()) {
       try {
-        f.createNewFile();
+        file.createNewFile();
       }catch (Exception e) {
         System.out.println(e.getMessage());
       }
     }
-    BufferedWriter writer = new BufferedWriter(new FileWriter(filepath));
-    writer.write(string);
+    BufferedWriter writer = new BufferedWriter(new FileWriter(file.getPath()));
+    writer.write(content.toString());
     writer.close();
   }
 
