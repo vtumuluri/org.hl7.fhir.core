@@ -26,6 +26,8 @@ public class ParserAndroid {
   public static final String PACKAGE_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
 
   public static final Map<File, CompilationUnit> mGeneratedClassMap = new HashMap<>();
+  public static final Map<File, CompilationUnit> mGeneratedEnumMap = new HashMap<>();
+  public static final Map<String, String> mOldImportToNewEnumImportMap = new HashMap<>();
 
   /**
    * For enums, will need TypeConverters, no generic type converter exists, so each enum will need a generated converter
@@ -67,20 +69,29 @@ public class ParserAndroid {
 
     resourceList.forEach(name -> {
       try {
-        addToGeneratedClassMap(String.format(MODEL_SRC_DIR, "dstu2"), name, ".java", String.format(MODEL_DEST_DIR, "dstu2"), "dstu2", mGeneratedClassMap);
+        populateGeneratedClassMap(String.format(MODEL_SRC_DIR, "dstu2"), name, ".java", String.format(MODEL_DEST_DIR, "dstu2"), "dstu2", mGeneratedClassMap, mGeneratedEnumMap);
       } catch (IOException e) {
         e.printStackTrace();
       }
     });
 
-    mGeneratedClassMap.keySet().forEach(key -> {
+    mGeneratedEnumMap.keySet().forEach(key -> {
       try {
-        FileUtils.writeDataToFile(key, mGeneratedClassMap.get(key));
+        FileUtils.writeDataToFile(key, mGeneratedEnumMap.get(key));
       } catch (IOException e) {
         System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());;
       }
     });
 
+    mGeneratedClassMap.keySet().forEach(key -> {
+      try {
+        ClassUtils.cleanImports(mOldImportToNewEnumImportMap, mGeneratedClassMap.get(key), "dstu2");
+        String cleanedContents = ClassUtils.cleanLooseReferences(mGeneratedClassMap.get(key), "dstu2");
+        FileUtils.writeDataToFile(key, cleanedContents);
+      } catch (IOException e) {
+        System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());;
+      }
+    });
   }
 
   /**
@@ -98,7 +109,9 @@ public class ParserAndroid {
     });
   }
 
-  public static void addToGeneratedClassMap(String srcdirectory, String filename, String extension, String destDir, String fhirVersion, Map<File, CompilationUnit> generatedClassMap) throws IOException {
+  public static void populateGeneratedClassMap(String srcdirectory, String filename, String extension, String destDir,
+                                               String fhirVersion, Map<File, CompilationUnit> generatedClassMap,
+                                               Map<File, CompilationUnit> generatedEnumMap) throws IOException {
     String projectDirectory = new File("").getAbsolutePath();
     String filePathWithExtension = projectDirectory + srcdirectory + filename + extension;
     CompilationUnit topLevelCompilationUnit = ParserUtils.getCompilationUnit(filePathWithExtension);
@@ -107,7 +120,7 @@ public class ParserAndroid {
     switch (ParserUtils.getFileType(topLevelCompilationUnit, filename)) {
       case CLASS:
         ClassOrInterfaceDeclaration classDeclaration = ParserUtils.loadClass(topLevelCompilationUnit, filename);
-        EnumUtils.extractInnerEnumClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion, generatedClassMap);
+        EnumUtils.extractInnerEnumClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion, generatedEnumMap, mOldImportToNewEnumImportMap);
         ClassUtils.extractInnerClasses(topLevelCompilationUnit, classDeclaration, destDir, fhirVersion, generatedClassMap);
         // pull all nested classes out
         break;
@@ -124,8 +137,9 @@ public class ParserAndroid {
     }
 
     topLevelCompilationUnit.setPackageDeclaration(String.format(PACKAGE_BASE_CLASS, fhirVersion));
-    ClassUtils.removeExplicitPackageReferences(topLevelCompilationUnit, fhirVersion);
-    FileUtils.writeDataToFile(new File(projectDirectory + String.format(MODEL_DEST_DIR, fhirVersion) + filename + ".java"), topLevelCompilationUnit);
+    //ClassUtils.removeExplicitPackageReferences(topLevelCompilationUnit, fhirVersion);
+    generatedClassMap.put(new File(projectDirectory + String.format(MODEL_DEST_DIR, fhirVersion) + filename + ".java"), topLevelCompilationUnit);
+
   }
 
 

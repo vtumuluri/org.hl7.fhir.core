@@ -18,6 +18,8 @@ public class ClassUtils {
   public static final String PACKAGE_DECLARATION_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
   public static final String OLD_EXPLICIT_PACKAGE_DEC = "org.hl7.fhir.%1$s.model.";
   public static final String NEW_EXPLICIT_PACKAGE_DEC = "org.hl7.fhir.android.generated.%1$s.";
+  public static final String OLD_ENUMERATION_IMPORT = "org.hl7.fhir.%1$s.model.Enumerations.";
+  public static final String NEW_ENUMERATION_IMPORT = "org.hl7.fhir.android.generated.%1$s.EnumerationsEnum.%2$s";
 
 
   /**
@@ -39,7 +41,7 @@ public class ClassUtils {
       for (ClassOrInterfaceDeclaration dec : foundClasses) {
         fileContent = generateClassData(baseCompilationUnit, fhirVersion, dec);
         baseCompilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
-        removeExplicitPackageReferences(fileContent, fhirVersion);
+        //removeExplicitPackageReferences(fileContent, fhirVersion);
         generatedClassMap.put(new File(targetDirectory + "/" + dec.getNameAsString() + ".java"), fileContent);
       }
     }
@@ -54,11 +56,12 @@ public class ClassUtils {
    * @param c
    * @throws IOException
    */
-  public static CompilationUnit generateClassData(CompilationUnit baseCompilationUnit, String fhirVersion, ClassOrInterfaceDeclaration c) throws IOException {
+  public static CompilationUnit generateClassData(CompilationUnit baseCompilationUnit, String fhirVersion, ClassOrInterfaceDeclaration c) {
     CompilationUnit compilationUnit = new CompilationUnit();
     ClassOrInterfaceDeclaration generatedClass = compilationUnit.addClass(c.getNameAsString());
     ParserUtils.copyClassOrInterfaceDeclaration(c, generatedClass);
     baseCompilationUnit.getImports().forEach(compilationUnit::addImport);
+    baseCompilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
     compilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
     generatedClass.setModifier(Modifier.Keyword.STATIC, false);
     c.remove();
@@ -78,12 +81,12 @@ public class ClassUtils {
     NodeList<ImportDeclaration> imports = fileContents.getImports();
     NodeList<ImportDeclaration> newImports = new NodeList<>();
     imports.forEach(i -> {
-      if(i.toString().contains(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion))) {
-        try {
+      // Order here matters, do enumerations class fixes first, then the rest
+      if (i.getNameAsString().contains(String.format(OLD_ENUMERATION_IMPORT, currentFhirVersion))) {
+        i.setName(String.format(NEW_ENUMERATION_IMPORT, currentFhirVersion, i.getNameAsString().substring(i.getNameAsString().lastIndexOf('.') + 1)));
+      }
+      if(i.getNameAsString().contains(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion))) {
           i.setName(i.getNameAsString().replace(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion), String.format(NEW_EXPLICIT_PACKAGE_DEC, currentFhirVersion)));
-        } catch (Exception e) {
-          System.out.println();
-        }
       }
       newImports.add(new ImportDeclaration(i.getName(), i.isStatic(), i.isAsterisk()));
     });
@@ -116,4 +119,20 @@ public class ClassUtils {
     return foundClasses;
   }
 
+  public static void cleanImports(Map<String, String> mOldImportToNewEnumImportMap, CompilationUnit compilationUnit, String currentFhirVersion) {
+    compilationUnit.getImports().forEach(i -> {
+      // Replace all newly mapped enum and enumfactory imports
+      if (mOldImportToNewEnumImportMap.containsKey(i.getNameAsString())) {
+        i.setName(mOldImportToNewEnumImportMap.get(i.getNameAsString()));
+      }
+      // Replace all resource reference imports
+      if(i.getNameAsString().contains(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion))) {
+        i.setName(i.getNameAsString().replace(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion), String.format(NEW_EXPLICIT_PACKAGE_DEC, currentFhirVersion)));
+      }
+    });
+  }
+
+  public static String cleanLooseReferences(CompilationUnit compilationUnit, String dstu2) {
+    return compilationUnit.toString().replaceAll(String.format(OLD_EXPLICIT_PACKAGE_DEC, dstu2), "");
+  }
 }

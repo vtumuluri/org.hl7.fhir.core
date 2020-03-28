@@ -10,6 +10,7 @@ import com.github.javaparser.ast.visitor.ModifierVisitor;
 import com.github.javaparser.ast.visitor.Visitable;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import javafx.util.Pair;
+import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,15 +38,14 @@ public class EnumUtils {
   /*
    * %1$s - Name of the base resource class the enum was extracted from. ie: Account, Patient, Observation
    */
-  public static final String GENERATED_FOLDER_NAME = "/%1$sEnum";
+  public static final String GENERATED_DIRECTORY_NAME = "%1$sEnum";
+  public static final String GENERATED_FOLDER_NAME = "/" + GENERATED_DIRECTORY_NAME;
 
   /*
    * %1$s - Name of the enum class corresponding to this EnumFactory. ie: AccountStatus -> AccountStatusEnumFactory
    */
   public static final String ENUM_FACTORY_NAME_FORMAT = "%1$sEnumFactory";
 
-  public static final List<String> BASE_RESOURCE_CLASS_ADDITIONAL_IMPORTS = Arrays.asList(BASE_CLASS_ENUM_IMPORT,
-    BASE_CLASS_ENUM_FACTORY_IMPORT);
   public static final List<String> GENERATED_ENUM_IMPORT_LIST = Arrays.asList(IMPORT_FHIR_EXCEPTION);
   public static final List<String> GENERATED_ENUM_FACTORY_IMPORT_LIST = Arrays.asList(IMPORT_FHIR_BASE,
     IMPORT_FHIR_ENUM_FACTORY, IMPORT_FHIR_ENUMERATION, IMPORT_FHIR_PRIMITIVE_TYPE, IMPORT_GENERATED_ENUM, IMPORT_FHIR_EXCEPTION);
@@ -55,10 +55,12 @@ public class EnumUtils {
    * file. In addition to extracting the found enum files, we also search for the associated EnumFactoryClass
    *
    * @param c The {@link ClassOrInterfaceDeclaration} to search
+   * @param mOldImportToNewEnumImportMap
    */
   public static void extractInnerEnumClasses(CompilationUnit baseCompilationUnit, ClassOrInterfaceDeclaration c,
                                              String destinationDirectory, String fhirVersion,
-                                             Map<File, CompilationUnit> generatedClassMap) throws IOException {
+                                             Map<File, CompilationUnit> generatedClassMap,
+                                             Map<String, String> mOldImportToNewEnumImportMap) {
 
     String projectDirectory = new File("").getAbsolutePath();
 
@@ -69,16 +71,27 @@ public class EnumUtils {
       final String targetDirectory = projectDirectory + destinationDirectory + String.format(GENERATED_FOLDER_NAME, c.getName());
       FileUtils.createDirectory(targetDirectory);
 
+      String basePackageDeclaration = baseCompilationUnit.getPackageDeclaration().get().getNameAsString();
+
       for (EnumDeclaration e : foundEnums) {
         Pair<File, CompilationUnit> enumPair = generateEnumClass(c, fhirVersion, targetDirectory, e);
         generatedClassMap.put(enumPair.getKey(), enumPair.getValue());
-        Pair<File, CompilationUnit> factoryPair = generateEnumFactoryClass(c, fhirVersion, targetDirectory, e, c.getNameAsString());
-        if (factoryPair != null) generatedClassMap.put(factoryPair.getKey(), factoryPair.getValue());
 
-        baseCompilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
-        BASE_RESOURCE_CLASS_ADDITIONAL_IMPORTS.forEach(i -> {
-          baseCompilationUnit.addImport(String.format(i, fhirVersion, c.getNameAsString(), e.getNameAsString()));
-        });
+        String oldEnumImport = basePackageDeclaration + "." + c.getNameAsString() + "." +  FilenameUtils.removeExtension(enumPair.getKey().getName());
+        String newEnumImport = enumPair.getValue().getPackageDeclaration().get().getNameAsString() + "." +  FilenameUtils.removeExtension(enumPair.getKey().getName());
+        mOldImportToNewEnumImportMap.put(oldEnumImport, newEnumImport);
+
+        Pair<File, CompilationUnit> factoryPair = generateEnumFactoryClass(c, fhirVersion, targetDirectory, e, c.getNameAsString());
+        if (factoryPair != null) {
+          generatedClassMap.put(factoryPair.getKey(), factoryPair.getValue());
+          String oldEnumFactoryImport = basePackageDeclaration + "." + c.getNameAsString() + "." +  FilenameUtils.removeExtension(factoryPair.getKey().getName());
+          String newEnumFactoryImport = factoryPair.getValue().getPackageDeclaration().get().getNameAsString() + "." +  FilenameUtils.removeExtension(factoryPair.getKey().getName());
+          mOldImportToNewEnumImportMap.put(oldEnumFactoryImport, newEnumFactoryImport);
+          baseCompilationUnit.addImport(String.format(BASE_CLASS_ENUM_FACTORY_IMPORT, fhirVersion, c.getNameAsString(), e.getNameAsString()));
+        }
+
+        //baseCompilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
+        baseCompilationUnit.addImport(String.format(BASE_CLASS_ENUM_IMPORT, fhirVersion, c.getNameAsString(), e.getNameAsString()));
       }
     }
   }

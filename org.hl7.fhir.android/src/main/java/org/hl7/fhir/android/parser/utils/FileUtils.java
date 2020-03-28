@@ -81,13 +81,24 @@ public class FileUtils {
   }
 
   /**
-   * Writes the passed in String to the file at the given filepath.
+   * Writes the passed in {@link CompilationUnit} to the file at the given filepath.
    *
    * @param file   File to write to
    * @param content {@link CompilationUnit} to write to file
    * @throws IOException
    */
   public static void writeDataToFile(File file, CompilationUnit content) throws IOException {
+    writeDataToFile(file, content.toString());
+  }
+
+  /**
+   * Writes the passed in String to the file at the given filepath.
+   *
+   * @param file   File to write to
+   * @param content {@link String} to write to file
+   * @throws IOException
+   */
+  public static void writeDataToFile(File file, String content) throws IOException {
     if (!file.exists()) {
       try {
         file.createNewFile();
@@ -96,7 +107,7 @@ public class FileUtils {
       }
     }
     BufferedWriter writer = new BufferedWriter(new FileWriter(file.getPath()));
-    writer.write(content.toString());
+    writer.write(content);
     writer.close();
   }
 
