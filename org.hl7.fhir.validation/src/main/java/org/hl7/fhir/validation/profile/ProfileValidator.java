@@ -1,4 +1,4 @@
-package org.hl7.fhir.r5.validation;
+package org.hl7.fhir.validation.profile;
 
 /*-
  * #%L
@@ -20,7 +20,6 @@ package org.hl7.fhir.r5.validation;
  * #L%
  */
 
-
 import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.List;
@@ -34,15 +33,15 @@ import org.hl7.fhir.r5.utils.FHIRPathEngine;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
 import org.hl7.fhir.utilities.validation.ValidationMessage.IssueType;
+import org.hl7.fhir.validation.BaseValidator;
 
 public class ProfileValidator extends BaseValidator {
 
-  IWorkerContext context;
   private boolean checkAggregation = false;
   private boolean checkMustSupport = false;
 
-  public void setContext(IWorkerContext context) {
-    this.context = context;    
+  public ProfileValidator(IWorkerContext context) {
+    super(context);
   }
 
   public boolean isCheckAggregation() {

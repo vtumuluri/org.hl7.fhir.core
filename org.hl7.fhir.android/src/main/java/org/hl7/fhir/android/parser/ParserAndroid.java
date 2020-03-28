@@ -77,6 +77,7 @@ public class ParserAndroid {
 
     mGeneratedEnumMap.keySet().forEach(key -> {
       try {
+        ClassUtils.cleanImports(mOldImportToNewEnumImportMap, mGeneratedEnumMap.get(key), "dstu2");
         FileUtils.writeDataToFile(key, mGeneratedEnumMap.get(key));
       } catch (IOException e) {
         System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());;

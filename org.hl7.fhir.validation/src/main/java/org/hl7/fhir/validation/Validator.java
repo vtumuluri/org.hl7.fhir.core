@@ -1,4 +1,4 @@
-package org.hl7.fhir.r5.validation;
+package org.hl7.fhir.validation;
 
 /*-
  * #%L
@@ -49,17 +49,13 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 import java.awt.Desktop;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -67,6 +63,7 @@ import java.util.UUID;
 import org.hl7.fhir.r5.conformance.CapabilityStatementUtilities;
 import org.hl7.fhir.r5.conformance.CapabilityStatementUtilities.CapabilityStatementComparisonOutput;
 import org.hl7.fhir.r5.conformance.ProfileComparer;
+import org.hl7.fhir.r5.elementmodel.Manager.FhirFormat;
 import org.hl7.fhir.r5.formats.IParser;
 import org.hl7.fhir.r5.formats.IParser.OutputStyle;
 import org.hl7.fhir.r5.formats.XmlParser;
@@ -85,14 +82,13 @@ import org.hl7.fhir.r5.model.Resource;
 import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.r5.utils.KeyGenerator;
 import org.hl7.fhir.r5.utils.ToolingExtensions;
-import org.hl7.fhir.r5.validation.ValidationEngine.ScanOutputItem;
+import org.hl7.fhir.validation.ValidationEngine.ScanOutputItem;
 import org.hl7.fhir.utilities.TextFile;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.VersionUtilities;
 import org.hl7.fhir.utilities.cache.PackageCacheManager;
 import org.hl7.fhir.utilities.cache.ToolsVersion;
 import org.hl7.fhir.utilities.validation.ValidationMessage;
-import org.hl7.fhir.utilities.xhtml.XhtmlComposer;
 
 /**
  * A executable class that will validate one or more FHIR resources against
@@ -111,7 +107,7 @@ import org.hl7.fhir.utilities.xhtml.XhtmlComposer;
 public class Validator {
 
   public enum EngineMode {
-    VALIDATION, TRANSFORM, NARRATIVE, SNAPSHOT, SCAN, CONVERT, FHIRPATH
+    VALIDATION, TRANSFORM, NARRATIVE, SNAPSHOT, SCAN, CONVERT, FHIRPATH, VERSION
   }
 
   private static String getNamedParam(String[] args, String param) {
@@ -162,7 +158,7 @@ public class Validator {
       System.out.println("If requested, instances will also be verified against the appropriate schema");
       System.out.println("W3C XML Schema, JSON schema or ShEx, as appropriate");
       System.out.println("");
-      System.out.println("Usage: org.hl7.fhir.r5.validation.ValidationEngine (parameters)");
+      System.out.println("Usage: java -jar [validator].jar (parameters)");
       System.out.println("");
       System.out.println("The following parameters are supported:");
       System.out.println("[source]: a file, url, directory or pattern for resources to validate.  At");
@@ -200,6 +196,8 @@ public class Validator {
       System.out.println("     Produce additional information about the loading/validation process");
       System.out.println("-recurse");
       System.out.println("     Look in subfolders when -ig refers to a folder");
+      System.out.println("-locale");
+      System.out.println("     Specifies the locale/language of the validation result messages (eg.: de-DE");
       System.out.println("-sct");
       System.out.println("     Specify the edition of SNOMED CT to use. Valid Choices:");
       System.out.println("       intl | us | uk | au | nl | ca | se | dk | es");
@@ -322,7 +320,7 @@ public class Validator {
         }
         String definitions = VersionUtilities.packageForVersion(v)+"#"+v;
         System.out.println("Loading (v = "+v+", tx server http://tx.fhir.org)");
-        ValidationEngine validator = new ValidationEngine(definitions, "http://tx.fhir.org", txLog, FhirPublication.fromCode(v));
+        ValidationEngine validator = new ValidationEngine(definitions, "http://tx.fhir.org", txLog, FhirPublication.fromCode(v), v);
         for (int i = 0; i < args.length; i++) {
           if ("-ig".equals(args[i])) {
             if (i+1 == args.length)
@@ -331,7 +329,6 @@ public class Validator {
               String s = args[++i];
               if (!s.startsWith("hl7.fhir.core-")) {
                 System.out.println("Load Package: "+s);
-                validator.loadIg(s, true);
               }
             }
           }
@@ -405,9 +402,11 @@ public class Validator {
       boolean anyExtensionsAllowed = true;
       boolean hintAboutNonMustSupport = false;
       boolean recursive = false;
+      Locale locale = null;
       List<String> profiles = new ArrayList<String>();
       EngineMode mode = EngineMode.VALIDATION;
       String output = null;
+      Boolean canDoNative = null;
       List<String> sources= new ArrayList<String>();
       Map<String, String> locations = new HashMap<String, String>();
       String sv = "current";
@@ -416,6 +415,7 @@ public class Validator {
       String lang = null;
       String fhirpath = null;
       String snomedCT = "900000000000207008";
+      String targetVer = null;
       boolean doDebug = false;
       boolean assumeValidRestReferences = false;
 
@@ -429,6 +429,8 @@ public class Validator {
             throw new Error("Specified -output without indicating output file");
           else
             output = args[++i];
+        } else if (args[i].equals("-proxy")) {
+          i++; // ignore next parameter
         } else if (args[i].equals("-profile")) {
           String p = null;
           if (i+1 == args.length)
@@ -479,10 +481,23 @@ public class Validator {
             throw new Error("Snomed edition '"+s+"' not known");            
         } else if (args[i].equals("-recurse")) {
           recursive = true;
+        } else if (args[i].equals("-locale")) {
+          if (i+1 == args.length) {
+            throw new Error("Specified -locale without indicating locale");
+          } else {
+            locale = new Locale(args[++i]);
+          }
         } else if (args[i].equals("-strictExtensions")) {
           anyExtensionsAllowed = false;
         } else if (args[i].equals("-hintAboutNonMustSupport")) {
           hintAboutNonMustSupport = true;
+        } else if (args[i].equals("-to-version")) {
+          targetVer = args[++i];
+          mode = EngineMode.VERSION;
+        } else if (args[i].equals("-do-native")) {
+          canDoNative = true;
+        } else if (args[i].equals("-no-native")) {
+          canDoNative = false;
         } else if (args[i].equals("-transform")) {
           map = args[++i];
           mode = EngineMode.TRANSFORM;
@@ -568,11 +583,9 @@ public class Validator {
       String definitions = VersionUtilities.packageForVersion(sv)+"#"+VersionUtilities.getCurrentVersion(sv);
       System.out.println("  .. FHIR Version "+sv+", definitions from "+definitions);
       System.out.println("  .. connect to tx server @ "+txServer);
-      ValidationEngine validator = new ValidationEngine(definitions, txServer, txLog, FhirPublication.fromCode(sv));
+      ValidationEngine validator = new ValidationEngine(definitions, txServer, txLog, FhirPublication.fromCode(sv), sv);
       validator.setDebug(doDebug);
       System.out.println("    (v"+validator.getContext().getVersion()+")");
-      if (sv != null)
-        validator.setVersion(sv);
       for (String src : igs) {
         System.out.println("+  .. load IG from "+src);
         validator.loadIg(src, recursive);
@@ -582,6 +595,7 @@ public class Validator {
       validator.setHintAboutNonMustSupport(hintAboutNonMustSupport);
       validator.setAnyExtensionsAllowed(anyExtensionsAllowed);
       validator.setLanguage(lang);
+      validator.setLocale(locale);
       validator.setSnomedExtension(snomedCT);
       validator.setAssumeValidRestReferences(assumeValidRestReferences);
 
@@ -592,7 +606,28 @@ public class Validator {
         x = new XmlParser();
       x.setOutputStyle(OutputStyle.PRETTY);
 
-      if (mode == EngineMode.TRANSFORM) {
+      if (mode == EngineMode.VERSION) {
+        if  (sources.size() > 1) {
+          throw new Exception("Can only have one source when converting versions (found "+sources+")");
+        }
+        if  (targetVer == null) {
+          throw new Exception("Must provide a map when converting versions");
+        }
+        if (output == null) {
+          throw new Exception("Must nominate an output when converting versions");
+        }
+        try {
+          if (mapLog != null) {
+            validator.setMapLog(mapLog);
+          }
+          byte[] r = validator.transformVersion(sources.get(0), targetVer, output.endsWith(".json") ? FhirFormat.JSON : FhirFormat.XML, canDoNative);
+          System.out.println(" ...success");
+          TextFile.bytesToFile(r, output);
+        } catch (Exception e) {
+          System.out.println(" ...Failure: "+e.getMessage());
+          e.printStackTrace();
+        }
+      } else if (mode == EngineMode.TRANSFORM) {
         if  (sources.size() > 1)
           throw new Exception("Can only have one source when doing a transform (found "+sources+")");
         if  (txServer == null)

@@ -46,7 +46,7 @@ public class EnumUtils {
    */
   public static final String ENUM_FACTORY_NAME_FORMAT = "%1$sEnumFactory";
 
-  public static final List<String> GENERATED_ENUM_IMPORT_LIST = Arrays.asList(IMPORT_FHIR_EXCEPTION);
+  //public static final List<String> GENERATED_ENUM_IMPORT_LIST = Arrays.asList(IMPORT_FHIR_EXCEPTION);
   public static final List<String> GENERATED_ENUM_FACTORY_IMPORT_LIST = Arrays.asList(IMPORT_FHIR_BASE,
     IMPORT_FHIR_ENUM_FACTORY, IMPORT_FHIR_ENUMERATION, IMPORT_FHIR_PRIMITIVE_TYPE, IMPORT_GENERATED_ENUM, IMPORT_FHIR_EXCEPTION);
 
@@ -74,7 +74,7 @@ public class EnumUtils {
       String basePackageDeclaration = baseCompilationUnit.getPackageDeclaration().get().getNameAsString();
 
       for (EnumDeclaration e : foundEnums) {
-        Pair<File, CompilationUnit> enumPair = generateEnumClass(c, fhirVersion, targetDirectory, e);
+        Pair<File, CompilationUnit> enumPair = generateEnumClass(baseCompilationUnit, c, fhirVersion, targetDirectory, e);
         generatedClassMap.put(enumPair.getKey(), enumPair.getValue());
 
         String oldEnumImport = basePackageDeclaration + "." + c.getNameAsString() + "." +  FilenameUtils.removeExtension(enumPair.getKey().getName());
@@ -147,14 +147,15 @@ public class EnumUtils {
    * @param e
    * @throws IOException
    */
-  public static Pair<File, CompilationUnit> generateEnumClass(ClassOrInterfaceDeclaration parentClass, String fhirVersion, String targetDirectory, EnumDeclaration e) {
+  public static Pair<File, CompilationUnit> generateEnumClass(CompilationUnit baseCompilationUnit, ClassOrInterfaceDeclaration parentClass, String fhirVersion, String targetDirectory, EnumDeclaration e) {
     CompilationUnit compilationUnit = new CompilationUnit();
     ParserUtils.copyEnumDeclaration(e, compilationUnit.addEnum(e.getNameAsString()));
     compilationUnit.setImports(new NodeList<>());
     compilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_ENUM_CLASS, fhirVersion, parentClass.getName()));
-    GENERATED_ENUM_IMPORT_LIST.forEach(i -> {
-      compilationUnit.addImport(String.format(i, fhirVersion));
-    });
+    compilationUnit.setImports(baseCompilationUnit.getImports());
+//    GENERATED_ENUM_IMPORT_LIST.forEach(i -> {
+//      compilationUnit.addImport(String.format(i, fhirVersion));
+//    });
     // Remove the enum from the original compilation unit
     e.remove();
     // Return our new pair or the desired File to create and the contents and a compilation unit

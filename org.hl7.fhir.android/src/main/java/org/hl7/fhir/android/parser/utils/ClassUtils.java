@@ -41,7 +41,6 @@ public class ClassUtils {
       for (ClassOrInterfaceDeclaration dec : foundClasses) {
         fileContent = generateClassData(baseCompilationUnit, fhirVersion, dec);
         baseCompilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
-        //removeExplicitPackageReferences(fileContent, fhirVersion);
         generatedClassMap.put(new File(targetDirectory + "/" + dec.getNameAsString() + ".java"), fileContent);
       }
     }
