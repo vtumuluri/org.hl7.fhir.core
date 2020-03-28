@@ -153,9 +153,6 @@ public class EnumUtils {
     compilationUnit.setImports(new NodeList<>());
     compilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_ENUM_CLASS, fhirVersion, parentClass.getName()));
     compilationUnit.setImports(baseCompilationUnit.getImports());
-//    GENERATED_ENUM_IMPORT_LIST.forEach(i -> {
-//      compilationUnit.addImport(String.format(i, fhirVersion));
-//    });
     // Remove the enum from the original compilation unit
     e.remove();
     // Return our new pair or the desired File to create and the contents and a compilation unit

@@ -3,6 +3,7 @@ package org.hl7.fhir.android.parser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumDeclaration;
+import org.apache.commons.io.FilenameUtils;
 import org.hl7.fhir.android.parser.utils.*;
 
 import java.io.File;
@@ -14,6 +15,8 @@ import java.util.Map;
 
 public class ParserAndroid {
 
+  public static final String EXPRESSION_NODE = "ExpressionNode";
+  public static final String TYPE_DETAILS = "TypeDetails";
   public static final String DSTU2 = "dstu2";
   public static final String DSTU3 = "dstu3";
   public static final String R4 = "r4";
@@ -24,6 +27,8 @@ public class ParserAndroid {
   public static final String MODEL_GENERATED_DIR = "/org.hl7.fhir.android/src/main/java/org/hl7/fhir/android/generated/";
   public static final String MODEL_DEST_DIR = MODEL_GENERATED_DIR + "%1$s/";
   public static final String PACKAGE_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
+
+  public static final List<String> IGNORED_CLASSES = Arrays.asList(EXPRESSION_NODE, TYPE_DETAILS);
 
   public static final Map<File, CompilationUnit> mGeneratedClassMap = new HashMap<>();
   public static final Map<File, CompilationUnit> mGeneratedEnumMap = new HashMap<>();
@@ -85,12 +90,15 @@ public class ParserAndroid {
     });
 
     mGeneratedClassMap.keySet().forEach(key -> {
-      try {
-        ClassUtils.cleanImports(mOldImportToNewEnumImportMap, mGeneratedClassMap.get(key), "dstu2");
-        String cleanedContents = ClassUtils.cleanLooseReferences(mGeneratedClassMap.get(key), "dstu2");
-        FileUtils.writeDataToFile(key, cleanedContents);
-      } catch (IOException e) {
-        System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());;
+      if (IGNORED_CLASSES.stream().noneMatch(FilenameUtils.removeExtension(key.getName())::equals)) {
+        try {
+          ClassUtils.cleanImports(mOldImportToNewEnumImportMap, mGeneratedClassMap.get(key), "dstu2");
+          String cleanedContents = ClassUtils.cleanLooseReferences(mGeneratedClassMap.get(key), "dstu2");
+          FileUtils.writeDataToFile(key, cleanedContents);
+        } catch (IOException e) {
+          System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());
+          ;
+        }
       }
     });
   }
