@@ -1,6 +1,7 @@
 package org.hl7.fhir.android.parser.utils;
 
 import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -171,4 +172,5 @@ public class EnumUtils {
 
     return foundEnums;
   }
+
 }
