@@ -17,6 +17,7 @@ public class ParserAndroid {
 
   public static final String EXPRESSION_NODE = "ExpressionNode";
   public static final String TYPE_DETAILS = "TypeDetails";
+  public static final String CONSTANTS = "Constants";
   public static final String DSTU2 = "dstu2";
   public static final String DSTU3 = "dstu3";
   public static final String R4 = "r4";
@@ -28,7 +29,7 @@ public class ParserAndroid {
   public static final String MODEL_DEST_DIR = MODEL_GENERATED_DIR + "%1$s/";
   public static final String PACKAGE_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
 
-  public static final List<String> IGNORED_CLASSES = Arrays.asList(EXPRESSION_NODE, TYPE_DETAILS);
+  public static final List<String> IGNORED_CLASSES = Arrays.asList(EXPRESSION_NODE, TYPE_DETAILS, CONSTANTS);
 
   public static final Map<File, CompilationUnit> mGeneratedClassMap = new HashMap<>();
   public static final Map<File, CompilationUnit> mGeneratedEnumMap = new HashMap<>();
@@ -70,36 +71,38 @@ public class ParserAndroid {
       System.exit(0);
     }
 
-    List<String> resourceList = FileUtils.listAllJavaFilesInDirectory(projectDirectory + String.format(MODEL_SRC_DIR, "dstu2"));
+    SUPPORTED_FHIR_VERSIONS.forEach(version -> {
+      List<String> resourceList = FileUtils.listAllJavaFilesInDirectory(projectDirectory + String.format(MODEL_SRC_DIR, version));
 
-    resourceList.forEach(name -> {
-      try {
-        populateGeneratedClassMap(String.format(MODEL_SRC_DIR, "dstu2"), name, ".java", String.format(MODEL_DEST_DIR, "dstu2"), "dstu2", mGeneratedClassMap, mGeneratedEnumMap);
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    });
-
-    mGeneratedEnumMap.keySet().forEach(key -> {
-      try {
-        ClassUtils.cleanImports(mOldImportToNewEnumImportMap, mGeneratedEnumMap.get(key), "dstu2");
-        FileUtils.writeDataToFile(key, mGeneratedEnumMap.get(key));
-      } catch (IOException e) {
-        System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());;
-      }
-    });
-
-    mGeneratedClassMap.keySet().forEach(key -> {
-      if (IGNORED_CLASSES.stream().noneMatch(FilenameUtils.removeExtension(key.getName())::equals)) {
+      resourceList.forEach(name -> {
         try {
-          ClassUtils.cleanImports(mOldImportToNewEnumImportMap, mGeneratedClassMap.get(key), "dstu2");
-          String cleanedContents = ClassUtils.cleanLooseReferences(mGeneratedClassMap.get(key), "dstu2");
-          FileUtils.writeDataToFile(key, cleanedContents);
+          populateGeneratedClassMap(String.format(MODEL_SRC_DIR, version), name, ".java", String.format(MODEL_DEST_DIR, version), version, mGeneratedClassMap, mGeneratedEnumMap);
         } catch (IOException e) {
-          System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());
-          ;
+          e.printStackTrace();
         }
-      }
+      });
+
+      mGeneratedEnumMap.keySet().forEach(key -> {
+        try {
+          ClassUtils.cleanImports(mOldImportToNewEnumImportMap, mGeneratedEnumMap.get(key), version);
+          FileUtils.writeDataToFile(key, mGeneratedEnumMap.get(key));
+        } catch (IOException e) {
+          System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());;
+        }
+      });
+
+      mGeneratedClassMap.keySet().forEach(key -> {
+        if (IGNORED_CLASSES.stream().noneMatch(FilenameUtils.removeExtension(key.getName())::equals)) {
+          try {
+            ClassUtils.cleanImports(mOldImportToNewEnumImportMap, mGeneratedClassMap.get(key), version);
+            String cleanedContents = ClassUtils.cleanLooseReferences(mGeneratedClassMap.get(key), version);
+            FileUtils.writeDataToFile(key, cleanedContents);
+          } catch (IOException e) {
+            System.out.println("Error writing file " + key.getName() + "::\n" + e.getMessage());
+            ;
+          }
+        }
+      });
     });
   }
 
