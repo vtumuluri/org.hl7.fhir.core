@@ -15,35 +15,44 @@ import java.util.*;
 
 public class ClassUtils {
 
+  public static final String JAVA = "/java/";
   public static final String PACKAGE_DECLARATION_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
   public static final String OLD_EXPLICIT_PACKAGE_DEC = "org.hl7.fhir.%1$s.model.";
   public static final String NEW_EXPLICIT_PACKAGE_DEC = "org.hl7.fhir.android.generated.%1$s.";
   public static final String OLD_ENUMERATION_IMPORT = "org.hl7.fhir.%1$s.model.Enumerations.";
   public static final String NEW_ENUMERATION_IMPORT = "org.hl7.fhir.android.generated.%1$s.EnumerationsEnum.%2$s";
 
-
   /**
    * Searched the passed in {@link ClassOrInterfaceDeclaration} for all Enum classes and extracts them into a new java
    * file. In addition to extracting the found enum files, we also search for the associated EnumFactoryClass
    *
-   * @param c The {@link ClassOrInterfaceDeclaration} to search
+   * @param c                 The {@link ClassOrInterfaceDeclaration} to search
    * @param generatedClassMap
    */
-  public static void extractInnerClasses(CompilationUnit baseCompilationUnit, ClassOrInterfaceDeclaration c, String destinationDirectory, String fhirVersion, Map<File, CompilationUnit> generatedClassMap) throws IOException {
+  public static void extractInnerClasses(CompilationUnit baseCompilationUnit, ClassOrInterfaceDeclaration c, String destinationDirectory, String fhirVersion, Map<File, CompilationUnit> generatedClassMap) {
     String projectDirectory = new File("").getAbsolutePath();
-
     Set<ClassOrInterfaceDeclaration> foundClasses = getClassDeclarations(c);
     final String targetDirectory = projectDirectory + destinationDirectory;
     CompilationUnit fileContent = null;
-
+    String packageDeclaration = generatePackageDeclaration(destinationDirectory);
     if (!foundClasses.isEmpty()) {
       // Classes exist within this class, we need to extract them to separate files
       for (ClassOrInterfaceDeclaration dec : foundClasses) {
         fileContent = generateClassData(baseCompilationUnit, fhirVersion, dec);
-        baseCompilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
+        fileContent.setPackageDeclaration(packageDeclaration);
         generatedClassMap.put(new File(targetDirectory + "/" + dec.getNameAsString() + ".java"), fileContent);
       }
     }
+  }
+
+  /**
+   * Takes the passed in directory path and returns the related package declaration as a string.
+   * @param destinationDirectory Path to the file location
+   *
+   * @return {@link String} package declaration, ie: "org.hl7.fhir.iantorno.stuff"
+   */
+  public static String generatePackageDeclaration(String destinationDirectory) {
+    return destinationDirectory.substring(destinationDirectory.indexOf(JAVA) + JAVA.length(), destinationDirectory.length() - 1).replaceAll("/",".");
   }
 
   /**
@@ -60,8 +69,6 @@ public class ClassUtils {
     ClassOrInterfaceDeclaration generatedClass = compilationUnit.addClass(c.getNameAsString());
     ParserUtils.copyClassOrInterfaceDeclaration(c, generatedClass);
     baseCompilationUnit.getImports().forEach(compilationUnit::addImport);
-    baseCompilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
-    compilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_BASE_CLASS, fhirVersion));
     generatedClass.setModifier(Modifier.Keyword.STATIC, false);
     c.remove();
     return compilationUnit;
@@ -71,9 +78,9 @@ public class ClassUtils {
    * Searches the passes in compilation unit for explicit package references to the old version of the FHIR Model files,
    * and then removes them. (We shouldn't need to keep them in, as we've flattened the folder structure.
    *
-   * @param fileContents {@link CompilationUnit} to search.
+   * @param fileContents       {@link CompilationUnit} to search.
    * @param currentFhirVersion {@link String} the current fhir version string we will use to construct the search string. ie
-   *                                  "dstu2" -> org.hl7.fhir.dstu2.model.
+   *                           "dstu2" -> org.hl7.fhir.dstu2.model.
    * @return The resulting String body of the parsed {@link CompilationUnit}
    */
   public static void removeExplicitPackageReferences(CompilationUnit fileContents, String currentFhirVersion) {
@@ -84,8 +91,8 @@ public class ClassUtils {
       if (i.getNameAsString().contains(String.format(OLD_ENUMERATION_IMPORT, currentFhirVersion))) {
         i.setName(String.format(NEW_ENUMERATION_IMPORT, currentFhirVersion, i.getNameAsString().substring(i.getNameAsString().lastIndexOf('.') + 1)));
       }
-      if(i.getNameAsString().contains(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion))) {
-          i.setName(i.getNameAsString().replace(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion), String.format(NEW_EXPLICIT_PACKAGE_DEC, currentFhirVersion)));
+      if (i.getNameAsString().contains(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion))) {
+        i.setName(i.getNameAsString().replace(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion), String.format(NEW_EXPLICIT_PACKAGE_DEC, currentFhirVersion)));
       }
       newImports.add(new ImportDeclaration(i.getName(), i.isStatic(), i.isAsterisk()));
     });
@@ -125,7 +132,7 @@ public class ClassUtils {
         i.setName(mOldImportToNewEnumImportMap.get(i.getNameAsString()));
       }
       // Replace all resource reference imports
-      if(i.getNameAsString().contains(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion))) {
+      if (i.getNameAsString().contains(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion))) {
         i.setName(i.getNameAsString().replace(String.format(OLD_EXPLICIT_PACKAGE_DEC, currentFhirVersion), String.format(NEW_EXPLICIT_PACKAGE_DEC, currentFhirVersion)));
       }
     });

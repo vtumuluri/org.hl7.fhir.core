@@ -23,6 +23,7 @@ public class EnumUtils {
    * %2$s - Name of the base resource class the enum was extracted from. ie: Account, Patient, Observation
    * %3$s - Name of the extracted enum. ie: AccountStatus, DayOfWeek
    */
+  public static final String CONFIGURATION_IMPORT = "org.hl7.fhir.android.generated.%1$s.Configuration";
   public static final String BASE_CLASS_ENUM_IMPORT = "org.hl7.fhir.android.generated.%1$s.%2$sEnum.%3$s";
   public static final String BASE_CLASS_ENUM_FACTORY_IMPORT = "org.hl7.fhir.android.generated.%1$s.%2$sEnum.%3$sEnumFactory";
   public static final String PACKAGE_DECLARATION_BASE_CLASS = "org.hl7.fhir.android.generated.%1$s";
@@ -153,6 +154,7 @@ public class EnumUtils {
     compilationUnit.setImports(new NodeList<>());
     compilationUnit.setPackageDeclaration(String.format(PACKAGE_DECLARATION_ENUM_CLASS, fhirVersion, parentClass.getName()));
     compilationUnit.setImports(baseCompilationUnit.getImports());
+    compilationUnit.addImport(new ImportDeclaration(String.format(CONFIGURATION_IMPORT, fhirVersion), false, false));
     // Remove the enum from the original compilation unit
     e.remove();
     // Return our new pair or the desired File to create and the contents and a compilation unit

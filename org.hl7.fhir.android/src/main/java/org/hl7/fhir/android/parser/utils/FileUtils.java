@@ -23,12 +23,13 @@ public class FileUtils {
    * @param path {@link String} filepath
    * @return {@link List < String >} of all filenames
    */
-  public static List<String> listAllJavaFilesInDirectory(String path) {
-    List<String> result = new ArrayList<>();
+  public static List<File> listAllJavaFilesInDirectory(String path) {
+    List<File> result = new ArrayList<>();
     try (Stream<Path> walk = Files.walk(Paths.get(path))) {
       walk.map(Path::toString)
         .filter(f -> f.endsWith(".java"))
-        .map(FileUtils::pullFileNameFromPath)
+        //.map(f -> f.substring(0, f.lastIndexOf('.')))
+        .map(File::new)
         .sorted()
         .collect(Collectors.toCollection(() -> result));
     } catch (IOException e) {
