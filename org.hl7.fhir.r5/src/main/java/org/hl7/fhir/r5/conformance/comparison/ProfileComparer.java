@@ -1,4 +1,4 @@
-package org.hl7.fhir.r5.conformance;
+package org.hl7.fhir.r5.conformance.comparison;
 
 import java.io.BufferedOutputStream;
 
@@ -45,8 +45,10 @@ import java.util.zip.ZipInputStream;
 import org.hl7.fhir.exceptions.DefinitionException;
 import org.hl7.fhir.exceptions.FHIRException;
 import org.hl7.fhir.exceptions.FHIRFormatError;
-import org.hl7.fhir.r5.conformance.ProfileComparer.ProfileComparison;
+import org.hl7.fhir.r5.conformance.ProfileUtilities;
 import org.hl7.fhir.r5.conformance.ProfileUtilities.ProfileKnowledgeProvider;
+import org.hl7.fhir.r5.conformance.ProfileUtilities.ProfileKnowledgeProvider.BindingResolution;
+import org.hl7.fhir.r5.conformance.comparison.ProfileComparer.ProfileComparison;
 import org.hl7.fhir.r5.context.IWorkerContext;
 import org.hl7.fhir.r5.formats.IParser;
 import org.hl7.fhir.r5.model.Base;
@@ -106,6 +108,17 @@ import org.hl7.fhir.utilities.xhtml.XhtmlComposer;
  */
 public class ProfileComparer implements ProfileKnowledgeProvider {
 
+  private class ValueSetComparison {
+    private ValueSet left;
+    private ValueSet right; 
+    private String error; 
+  }
+  
+
+  
+  
+  
+  
   private IWorkerContext context;
   private KeyGenerator keygen;
   private String folder;

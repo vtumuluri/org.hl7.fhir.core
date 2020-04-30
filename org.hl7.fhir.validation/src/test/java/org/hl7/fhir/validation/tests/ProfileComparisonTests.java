@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.UUID;
 
 import org.hl7.fhir.convertors.R5ToR5Loader;
-import org.hl7.fhir.r5.conformance.ProfileComparer;
+import org.hl7.fhir.r5.conformance.comparison.ProfileComparer;
 import org.hl7.fhir.r5.model.FhirPublication;
 import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.r5.utils.KeyGenerator;

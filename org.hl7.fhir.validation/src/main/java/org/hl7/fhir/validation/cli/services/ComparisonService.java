@@ -1,7 +1,7 @@
 package org.hl7.fhir.validation.cli.services;
 
 import org.hl7.fhir.r5.conformance.CapabilityStatementUtilities;
-import org.hl7.fhir.r5.conformance.ProfileComparer;
+import org.hl7.fhir.r5.conformance.comparison.ProfileComparer;
 import org.hl7.fhir.r5.formats.IParser;
 import org.hl7.fhir.r5.formats.JsonParser;
 import org.hl7.fhir.r5.formats.XmlParser;
