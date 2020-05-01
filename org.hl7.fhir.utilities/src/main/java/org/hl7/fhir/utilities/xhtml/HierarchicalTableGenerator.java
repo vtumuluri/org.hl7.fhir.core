@@ -469,6 +469,9 @@ public class HierarchicalTableGenerator extends TranslatingUtilities {
     public boolean isAlternating() {
       return alternating;
     }
+    public void setAlternating(boolean alternating) {
+      this.alternating = alternating;
+    }
     
   }
 
@@ -505,7 +508,7 @@ public class HierarchicalTableGenerator extends TranslatingUtilities {
   public TableModel initNormalTable(String prefix, boolean isLogical, boolean alternating, String id, boolean isActive) {
     TableModel model = new TableModel(id, isActive);
     
-    model.alternating = alternating;
+    model.setAlternating(alternating);
     model.setDocoImg(prefix+"help16.png");
     model.setDocoRef(prefix+"formats.html#table");
     model.getTitles().add(new Title(null, model.getDocoRef(), translate("sd.head", "Name"), translate("sd.hint", "The logical name of the element"), null, 0));
@@ -579,7 +582,7 @@ public class HierarchicalTableGenerator extends TranslatingUtilities {
     String color = "white";
     if (r.getColor() != null)
       color = r.getColor();
-    else if (model.alternating  && counter.isOdd())
+    else if (model.isAlternating()  && counter.isOdd())
       color = BACKGROUND_ALT_COLOR;
     
     tr.setAttribute("style", "border: " + border + "px #F0F0F0 solid; padding:0px; vertical-align: top; background-color: "+color+";");

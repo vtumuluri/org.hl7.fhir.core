@@ -20,6 +20,13 @@ public class StructuralMatch<T> {
     this.right = right;
   }
   
+  public StructuralMatch(T left, T right, String error) {
+    super();
+    this.left = left;
+    this.right = right;
+    this.error = error;
+  }
+  
   public StructuralMatch(String error, T right) {
     super();
     this.error = error;

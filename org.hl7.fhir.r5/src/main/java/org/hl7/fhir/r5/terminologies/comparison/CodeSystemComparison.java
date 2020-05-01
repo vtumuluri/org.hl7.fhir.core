@@ -6,7 +6,7 @@ import org.hl7.fhir.r5.model.CodeSystem;
 import org.hl7.fhir.r5.model.CodeSystem.ConceptDefinitionComponent;
 import org.hl7.fhir.r5.utilities.StructuralMatch;
 
-public class CodeSystemVersionComparison {
+public class CodeSystemComparison {
 
   private CodeSystem left;
   private CodeSystem right;
@@ -15,7 +15,7 @@ public class CodeSystemVersionComparison {
   private CodeSystem union;
   private CodeSystem intersection;
   
-  public CodeSystemVersionComparison(CodeSystem left, CodeSystem right) {
+  public CodeSystemComparison(CodeSystem left, CodeSystem right) {
     super();
     this.left = left;
     this.right = right;
