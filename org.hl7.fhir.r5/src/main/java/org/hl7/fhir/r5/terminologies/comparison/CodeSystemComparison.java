@@ -1,5 +1,7 @@
 package org.hl7.fhir.r5.terminologies.comparison;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.hl7.fhir.r5.model.CodeSystem;
@@ -14,12 +16,18 @@ public class CodeSystemComparison {
   private StructuralMatch<ConceptDefinitionComponent> combined;
   private CodeSystem union;
   private CodeSystem intersection;
+  private Map<String, String> propMap = new HashMap<>(); // right to left; left retains it's name 
   
   public CodeSystemComparison(CodeSystem left, CodeSystem right) {
     super();
     this.left = left;
     this.right = right;
     combined = new StructuralMatch<CodeSystem.ConceptDefinitionComponent>(); // base 
+  }
+
+
+  public Map<String, String> getPropMap() {
+    return propMap;
   }
 
 

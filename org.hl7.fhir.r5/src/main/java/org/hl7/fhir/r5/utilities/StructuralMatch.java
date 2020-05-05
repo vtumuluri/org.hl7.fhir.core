@@ -3,6 +3,8 @@ package org.hl7.fhir.r5.utilities;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hl7.fhir.r5.model.CodeSystem.ConceptDefinitionComponent;
+
 public class StructuralMatch<T> {
 
   private T left;
@@ -51,6 +53,25 @@ public class StructuralMatch<T> {
 
   public List<StructuralMatch<T>> getChildren() {
     return children;
+  }
+
+  /**
+   * return left if it exists, or return right (which might be null)
+   * 
+   * This is used when accessing whatever makes the items common
+   * 
+   * @return
+   */
+  public T either() {
+    return left != null ? left : right;
+  }
+
+  public boolean hasLeft() {
+    return left != null;
+  }
+  
+  public boolean hasRight() {
+    return right != null;
   }
   
 }

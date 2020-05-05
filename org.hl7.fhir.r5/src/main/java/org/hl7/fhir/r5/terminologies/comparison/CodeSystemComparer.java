@@ -1,6 +1,7 @@
 package org.hl7.fhir.r5.terminologies.comparison;
 
 import java.beans.PropertyDescriptor;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -20,13 +21,14 @@ import org.hl7.fhir.utilities.CommaSeparatedStringBuilder;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.xhtml.HierarchicalTableGenerator;
 import org.hl7.fhir.utilities.xhtml.XhtmlNode;
+import org.hl7.fhir.utilities.xhtml.HierarchicalTableGenerator.Cell;
+import org.hl7.fhir.utilities.xhtml.HierarchicalTableGenerator.Row;
 import org.hl7.fhir.utilities.xhtml.HierarchicalTableGenerator.TableModel;
 import org.hl7.fhir.utilities.xhtml.HierarchicalTableGenerator.Title;
 
 public class CodeSystemComparer {
 
   private IWorkerContext context;
-  private Map<String, String> propMap = new HashMap<>(); // right to left; left retains it's name 
   private CodeSystem right;
   
   public CodeSystemComparer(IWorkerContext context) {
@@ -53,7 +55,7 @@ public class CodeSystemComparer {
         String code = getUniqued(pR.getCode(), cs.getProperty());
         cs.addProperty(pR.copy().setCode(code));
       } else {
-        propMap.put(pR.getCode(), pL.getCode());
+        res.getPropMap().put(pR.getCode(), pL.getCode());
       }
     }
     
@@ -67,7 +69,7 @@ public class CodeSystemComparer {
     cs1.setDate(new Date());
     cs1.getProperty().addAll(cs.getProperty());
     
-    compareConcepts(left.getConcept(), right.getConcept(), res.getCombined(), res.getUnion().getConcept(), res.getIntersection().getConcept(), res.getUnion(), res.getIntersection());
+    compareConcepts(left.getConcept(), right.getConcept(), res.getCombined(), res.getUnion().getConcept(), res.getIntersection().getConcept(), res.getUnion(), res.getIntersection(), res);
     return res;
   }
   
@@ -100,28 +102,28 @@ public class CodeSystemComparer {
 
   
   private void compareConcepts(List<ConceptDefinitionComponent> left, List<ConceptDefinitionComponent> right, StructuralMatch<ConceptDefinitionComponent> combined, 
-      List<ConceptDefinitionComponent> union, List<ConceptDefinitionComponent> intersection, CodeSystem csU, CodeSystem csI) {
+      List<ConceptDefinitionComponent> union, List<ConceptDefinitionComponent> intersection, CodeSystem csU, CodeSystem csI, CodeSystemComparison res) {
     List<ConceptDefinitionComponent> matchR = new ArrayList<>();
     for (ConceptDefinitionComponent l : left) {
       ConceptDefinitionComponent r = findInList(right, l);
       if (r == null) {
         union.add(l);
-        combined.getChildren().add(new StructuralMatch<CodeSystem.ConceptDefinitionComponent>(l, "no Match Found"));
+        combined.getChildren().add(new StructuralMatch<CodeSystem.ConceptDefinitionComponent>(l, "No Left Value"));
       } else {
         matchR.add(r);
-        ConceptDefinitionComponent cdM = merge(l, r, csU.getProperty());
-        ConceptDefinitionComponent cdI = intersect(l, r);
+        ConceptDefinitionComponent cdM = merge(l, r, csU.getProperty(), res);
+        ConceptDefinitionComponent cdI = intersect(l, r, res);
         union.add(cdM);
         intersection.add(cdI);
         StructuralMatch<ConceptDefinitionComponent> sm = new StructuralMatch<CodeSystem.ConceptDefinitionComponent>(l, r, compare(l, r));
         combined.getChildren().add(sm);
-        compareConcepts(l.getConcept(), r.getConcept(), sm, cdM.getConcept(), cdI.getConcept(), csU, csI);
+        compareConcepts(l.getConcept(), r.getConcept(), sm, cdM.getConcept(), cdI.getConcept(), csU, csI, res);
       }
     }
     for (ConceptDefinitionComponent r : right) {
       if (!matchR.contains(r)) {
         union.add(r);
-        combined.getChildren().add(new StructuralMatch<CodeSystem.ConceptDefinitionComponent>("no Match Found", r));        
+        combined.getChildren().add(new StructuralMatch<CodeSystem.ConceptDefinitionComponent>("No Right Value", r));        
       }
     }
   }
@@ -147,14 +149,14 @@ public class CodeSystemComparer {
       if (Utilities.noString(left)) {
         b.append("No "+name+" on left side");
       } else if (!left.equals(right)) {
-        b.append("Values for "+name+" differ");
+        b.append(name+" differs between left and right");
       }
     } else if (!Utilities.noString(left)) {
       b.append("No "+name+" on right side");
     }
   }
 
-  private ConceptDefinitionComponent merge(ConceptDefinitionComponent l, ConceptDefinitionComponent r, List<PropertyComponent> destProps) {
+  private ConceptDefinitionComponent merge(ConceptDefinitionComponent l, ConceptDefinitionComponent r, List<PropertyComponent> destProps, CodeSystemComparison res) {
     ConceptDefinitionComponent cd = l.copy();
     if (!l.hasDisplay() && r.hasDisplay()) {
       cd.setDisplay(r.getDisplay());
@@ -162,12 +164,12 @@ public class CodeSystemComparer {
     if (!l.hasDefinition() && r.hasDefinition()) {
       cd.setDefinition(r.getDefinition());
     }
-    mergeProps(cd, l, r, destProps);
+    mergeProps(cd, l, r, destProps, res);
     mergeDesignations(cd, l, r);
     return cd;
   }
 
-  private ConceptDefinitionComponent intersect(ConceptDefinitionComponent l, ConceptDefinitionComponent r) {
+  private ConceptDefinitionComponent intersect(ConceptDefinitionComponent l, ConceptDefinitionComponent r, CodeSystemComparison res) {
     ConceptDefinitionComponent cd = l.copy();
     if (l.hasDisplay() && !r.hasDisplay()) {
       cd.setDisplay(null);
@@ -175,7 +177,7 @@ public class CodeSystemComparer {
     if (l.hasDefinition() && !r.hasDefinition()) {
       cd.setDefinition(null);
     }
-    intersectProps(cd, l, r);
+    intersectProps(cd, l, r, res);
 //    mergeDesignations(cd, l, r);
     return cd;
   }
@@ -231,39 +233,39 @@ public class CodeSystemComparer {
     return true;
   }
 
-  private void mergeProps(ConceptDefinitionComponent cd, ConceptDefinitionComponent l, ConceptDefinitionComponent r, List<PropertyComponent> destProps) {
+  private void mergeProps(ConceptDefinitionComponent cd, ConceptDefinitionComponent l, ConceptDefinitionComponent r, List<PropertyComponent> destProps, CodeSystemComparison res) {
     List<ConceptPropertyComponent> matchR = new ArrayList<>();
     for (ConceptPropertyComponent lp : l.getProperty()) {
-      ConceptPropertyComponent rp = findRightProp(r.getProperty(), lp);
+      ConceptPropertyComponent rp = findRightProp(r.getProperty(), lp, res);
       if (rp == null) {
         cd.getProperty().add(lp);
       } else {
         matchR.add(rp);
         cd.getProperty().add(lp);
         if (lp.getValue().equalsDeep(rp.getValue())) {
-          cd.getProperty().add(rp.setCode(propMap.get(rp.getCode())));
+          cd.getProperty().add(rp.setCode(res.getPropMap().get(rp.getCode())));
         }
       }
     }
     for (ConceptPropertyComponent rp : r.getProperty()) {
       if (!matchR.contains(rp)) {
-        cd.getProperty().add(rp.setCode(propMap.get(rp.getCode())));        
+        cd.getProperty().add(rp.setCode(res.getPropMap().get(rp.getCode())));        
       }
     }
   }
 
-  private void intersectProps(ConceptDefinitionComponent cd, ConceptDefinitionComponent l, ConceptDefinitionComponent r) {
+  private void intersectProps(ConceptDefinitionComponent cd, ConceptDefinitionComponent l, ConceptDefinitionComponent r, CodeSystemComparison res) {
     for (ConceptPropertyComponent lp : l.getProperty()) {
-      ConceptPropertyComponent rp = findRightProp(r.getProperty(), lp);
+      ConceptPropertyComponent rp = findRightProp(r.getProperty(), lp, res);
       if (rp != null) {
         cd.getProperty().add(lp);
       }
     }
   }
 
-  private ConceptPropertyComponent findRightProp(List<ConceptPropertyComponent> rightProperties, ConceptPropertyComponent lp) {
+  private ConceptPropertyComponent findRightProp(List<ConceptPropertyComponent> rightProperties, ConceptPropertyComponent lp, CodeSystemComparison res) {
     for (ConceptPropertyComponent p : rightProperties) {
-      if (propMap.get(p.getCode()).equals(lp.getCode())) {
+      if (res.getPropMap().get(p.getCode()).equals(lp.getCode())) {
         return p;
       }
     }
@@ -271,26 +273,109 @@ public class CodeSystemComparer {
   }
 
 
-  public XhtmlNode renderTree(CodeSystemComparison comparison, String id, String prefix) {
+  public XhtmlNode renderTree(CodeSystemComparison comparison, String id, String prefix) throws FHIRException, IOException {
     // columns: code, display (left|right), properties (left|right)
     HierarchicalTableGenerator gen = new HierarchicalTableGenerator(Utilities.path("[tmp]", "compare"), false);
-    TableModel model = new TableModel(id, true);
+    TableModel model = gen.new TableModel(id, true);
     model.setAlternating(true);
-      model.getTitles().add(new Title(null, model.getDocoRef(), translate("sd.head", "Name"), translate("sd.hint", "The logical name of the element"), null, 0));
-      model.getTitles().add(new Title(null, model.getDocoRef(), translate("sd.head", "Flags"), translate("sd.hint", "Information about the use of the element"), null, 0));
-      model.getTitles().add(new Title(null, model.getDocoRef(), translate("sd.head", "Card."), translate("sd.hint", "Minimum and Maximum # of times the the element can appear in the instance"), null, 0));
-      model.getTitles().add(new Title(null, model.getDocoRef(), translate("sd.head", "Type"), translate("sd.hint", "Reference to the type of the element"), null, 100));
-      model.getTitles().add(new Title(null, model.getDocoRef(), translate("sd.head", "Description & Constraints"), translate("sd.hint", "Additional information about the element"), null, 0));
-      if (isLogical) {
-        model.getTitles().add(new Title(null, prefix+"structuredefinition.html#logical", "Implemented As", "How this logical data item is implemented in a concrete resource", null, 0));
-      }
-      return model;
+    model.getTitles().add(gen.new Title(null, null, "Code", "The code for the concept", null, 100));
+    model.getTitles().add(gen.new Title(null, null, "Display", "The display for the concept", null, 200, 2));
+    for (PropertyComponent p : comparison.getUnion().getProperty()) {
+      model.getTitles().add(gen.new Title(null, null, p.getCode(), p.getDescription(), null, 100, 2));
     }
+    model.getTitles().add(gen.new Title(null, null, "Comments", "Additional information about the comparison", null, 200));
+    for (StructuralMatch<ConceptDefinitionComponent> t : comparison.getCombined().getChildren()) {
+      addRow(gen, model.getRows(), t, comparison);
+    }
+    return gen.generate(model, prefix, 0, null);
+  }
 
+  private void addRow(HierarchicalTableGenerator gen, List<Row> rows, StructuralMatch<ConceptDefinitionComponent> t, CodeSystemComparison comparison) {
+    Row r = gen.new Row();
+    rows.add(r);
+    r.getCells().add(gen.new Cell(null, null, t.either().getCode(), null, null));
+    if (t.hasLeft() && t.hasRight()) {
+      if (t.getLeft().hasDisplay() && t.getRight().hasDisplay()) {
+        if (t.getLeft().getDisplay().equals(t.getRight().getDisplay())) {
+          r.getCells().add(gen.new Cell(null, null, t.getLeft().getDisplay(), null, null).span(2));        
+        } else {
+          r.getCells().add(gen.new Cell(null, null, t.getLeft().getDisplay(), null, null));        
+          r.getCells().add(gen.new Cell(null, null, t.getRight().getDisplay(), null, null));
+        }
+      } else if (t.getLeft().hasDisplay()) {
+        r.getCells().add(gen.new Cell(null, null, t.getLeft().getDisplay(), null, null));        
+        r.getCells().add(missingCell(gen));        
+      } else if (t.getRight().hasDisplay()) {        
+        r.getCells().add(missingCell(gen));        
+        r.getCells().add(gen.new Cell(null, null, t.getRight().getDisplay(), null, null));        
+      } else {
+        r.getCells().add(missingCell(gen).span(2));
+      }
+      for (PropertyComponent p : comparison.getUnion().getProperty()) {
+        ConceptPropertyComponent lp = getProp(t.getLeft(), p, false, comparison);
+        ConceptPropertyComponent rp = getProp(t.getRight(), p, true, comparison);
 
+        if (lp != null && rp != null) {
+          if (lp.getValue().equals(rp.getValue())) {
+            r.getCells().add(gen.new Cell(null, null, t.getLeft().getDisplay(), null, null).span(2));        
+          } else {
+            r.getCells().add(gen.new Cell(null, null, lp.getValue().toString(), null, null));        
+            r.getCells().add(gen.new Cell(null, null, rp.getValue().toString(), null, null));
+          }
+        } else if (lp != null) {
+          r.getCells().add(gen.new Cell(null, null, lp.getValue().toString(), null, null));        
+          r.getCells().add(missingCell(gen));        
+        } else if (rp != null) {        
+          r.getCells().add(missingCell(gen));        
+          r.getCells().add(gen.new Cell(null, null, rp.getValue().toString(), null, null));        
+        } else {
+          r.getCells().add(missingCell(gen).span(2));
+        }
+        
+      }
+    } else if (t.hasLeft()) {
+      r.getCells().add(gen.new Cell(null, null, t.either().getDisplay(), null, null));
+      r.getCells().add(missingCell(gen));
+      for (PropertyComponent p : comparison.getUnion().getProperty()) {
+        r.getCells().add(propertyCell(gen, t.getLeft(), p, false, comparison));
+        r.getCells().add(missingCell(gen));
+      }
+    } else {
+      r.getCells().add(missingCell(gen));
+      r.getCells().add(gen.new Cell(null, null, t.either().getDisplay(), null, null));
+      for (PropertyComponent p : comparison.getUnion().getProperty()) {
+        r.getCells().add(missingCell(gen));
+        r.getCells().add(propertyCell(gen, t.getLeft(), p, true, comparison));
+      }
+    }
+    r.getCells().add(gen.new Cell(null, null, t.getError(), null, null));
+  }
 
-    TableModel model = gen.initNormalTable(corePath, false, true, profile.getId()+(diff ? "d" : "s"), active);
+  private Cell propertyCell(HierarchicalTableGenerator gen, ConceptDefinitionComponent cd, PropertyComponent p, boolean right, CodeSystemComparison comp) {
+    ConceptPropertyComponent cp = getProp(cd, p, right, comp);
+    if (cp == null) {
+      return missingCell(gen);
+    } else {
+      return gen.new Cell(null, null, cp.getValue().toString(), null, null);
+    }
+  }
 
+  public ConceptPropertyComponent getProp(ConceptDefinitionComponent cd, PropertyComponent p, boolean right, CodeSystemComparison comp) {
+    String c = p.getCode();
+    if (right) {
+      c = comp.getPropMap().get(c);
+    }
+    ConceptPropertyComponent cp = null;
+    for (ConceptPropertyComponent t : cd.getProperty()) {
+      if (t.getCode().equals(c)) {
+        cp = t;
+      }
+    }
+    return cp;
+  }
+
+  public Cell missingCell(HierarchicalTableGenerator gen) {
+    return gen.new Cell(null, null, "(n/a)", null, null).setStyle("background-color: #dddddd");
   }
 
 }
