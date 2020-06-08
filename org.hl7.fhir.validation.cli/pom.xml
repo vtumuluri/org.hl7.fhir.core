@@ -6,7 +6,7 @@
         <groupId>ca.uhn.hapi.fhir</groupId>
         <artifactId>org.hl7.fhir.core</artifactId>
         <version>0.0.1</version>
-        <relativePath>../pom.xml</relativePath>
+<!--        <relativePath>../pom.xml</relativePath>-->
     </parent>
 
     <artifactId>org.hl7.fhir.validation.cli</artifactId>

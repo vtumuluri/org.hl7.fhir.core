@@ -6,15 +6,15 @@
         <groupId>ca.uhn.hapi.fhir</groupId>
         <artifactId>org.hl7.fhir.core</artifactId>
         <version>0.0.1</version>
-        <relativePath>../pom.xml</relativePath>
+<!--        <relativePath>../pom.xml</relativePath>-->
     </parent>
 
     <artifactId>org.hl7.fhir.validation</artifactId>
-    <packaging>bundle</packaging>
+    <packaging>jar</packaging>
 
-    <properties>
-        <micronaut.version>1.3.4</micronaut.version>
-    </properties>
+<!--    <properties>-->
+<!--        <micronaut.version>1.3.4</micronaut.version>-->
+<!--    </properties>-->
 
     <dependencies>
 
