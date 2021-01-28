@@ -3,6 +3,7 @@ package org.hl7.fhir.convertors.conv40_50;
 
 import org.hl7.fhir.convertors.VersionConvertor_40_50;
 import org.hl7.fhir.exceptions.FHIRException;
+import org.hl7.fhir.r4.model.StructureMap.StructureMapGroupTypeMode;
 
 import java.util.stream.Collectors;
 
@@ -220,8 +221,11 @@ public class StructureMap40_50 extends VersionConvertor_40_50 {
             tgt.setNameElement(convertId(src.getNameElement()));
         if (src.hasExtends())
             tgt.setExtendsElement(convertId(src.getExtendsElement()));
-        if (src.hasTypeMode())
+        if (src.hasTypeMode()) {
             tgt.setTypeModeElement(convertStructureMapGroupTypeMode(src.getTypeModeElement()));
+        } else {
+          tgt.setTypeMode(StructureMapGroupTypeMode.NONE);          
+        }
         if (src.hasDocumentation())
             tgt.setDocumentationElement(convertString(src.getDocumentationElement()));
         for (org.hl7.fhir.r5.model.StructureMap.StructureMapGroupInputComponent t : src.getInput()) tgt.addInput(convertStructureMapGroupInputComponent(t));
@@ -236,8 +240,7 @@ public class StructureMap40_50 extends VersionConvertor_40_50 {
         VersionConvertor_40_50.copyElement(src, tgt);
         switch(src.getValue()) {
             case NONE:
-                tgt.setValue(org.hl7.fhir.r5.model.StructureMap.StructureMapGroupTypeMode.NONE);
-                break;
+                return null;
             case TYPES:
                 tgt.setValue(org.hl7.fhir.r5.model.StructureMap.StructureMapGroupTypeMode.TYPES);
                 break;
@@ -252,14 +255,13 @@ public class StructureMap40_50 extends VersionConvertor_40_50 {
     }
 
     static public org.hl7.fhir.r4.model.Enumeration<org.hl7.fhir.r4.model.StructureMap.StructureMapGroupTypeMode> convertStructureMapGroupTypeMode(org.hl7.fhir.r5.model.Enumeration<org.hl7.fhir.r5.model.StructureMap.StructureMapGroupTypeMode> src) throws FHIRException {
-        if (src == null || src.isEmpty())
-            return null;
-        org.hl7.fhir.r4.model.Enumeration<org.hl7.fhir.r4.model.StructureMap.StructureMapGroupTypeMode> tgt = new org.hl7.fhir.r4.model.Enumeration<>(new org.hl7.fhir.r4.model.StructureMap.StructureMapGroupTypeModeEnumFactory());
+      org.hl7.fhir.r4.model.Enumeration<org.hl7.fhir.r4.model.StructureMap.StructureMapGroupTypeMode> tgt = new org.hl7.fhir.r4.model.Enumeration<>(new org.hl7.fhir.r4.model.StructureMap.StructureMapGroupTypeModeEnumFactory());
+        if (src == null || src.isEmpty()) {
+          tgt.setValue(org.hl7.fhir.r4.model.StructureMap.StructureMapGroupTypeMode.NONE);
+          return tgt;
+        }
         VersionConvertor_40_50.copyElement(src, tgt);
         switch(src.getValue()) {
-            case NONE:
-                tgt.setValue(org.hl7.fhir.r4.model.StructureMap.StructureMapGroupTypeMode.NONE);
-                break;
             case TYPES:
                 tgt.setValue(org.hl7.fhir.r4.model.StructureMap.StructureMapGroupTypeMode.TYPES);
                 break;

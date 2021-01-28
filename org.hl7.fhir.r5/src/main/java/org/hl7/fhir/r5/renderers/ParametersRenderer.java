@@ -31,13 +31,19 @@ import org.hl7.fhir.utilities.xhtml.XhtmlNode;
 
 public class ParametersRenderer extends ResourceRenderer {
   
+  public ParametersRenderer(RenderingContext context) {
+    super(context);
+  }
+
   public ParametersRenderer(RenderingContext context, ResourceContext rcontext) {
     super(context, rcontext);
   }
 
-
   @Override
   public boolean render(XhtmlNode x, Resource r) throws FHIRFormatError, DefinitionException, IOException, FHIRException, EOperationOutcome {
+    x.h2().tx("Parameters");
+    XhtmlNode tbl = x.table("grid");
+    params(tbl, ((Parameters) r).getParameter(), 0);
     return false;
   }
 
@@ -69,7 +75,11 @@ public class ParametersRenderer extends ResourceRenderer {
       for (int i = 0; i < indent; i++) {
         td.tx(XhtmlNode.NBSP);        
       }
-      td.tx(p.get("name").primitiveValue());
+      if (p.has("name")) {
+        td.tx(p.get("name").primitiveValue());
+      } else {
+        td.tx("???");
+      }
       if (p.has("value")) {
         renderBase(tr.td(), p.get("value"));
       } else if (p.has("resource")) {
@@ -87,7 +97,7 @@ public class ParametersRenderer extends ResourceRenderer {
         }
       } else if (p.has("part")) {
         tr.td();
-        PropertyWrapper pw = getProperty(p, "parameter");
+        PropertyWrapper pw = getProperty(p, "part");
         paramsW(tbl, pw.getValues(), 1);
       }
     }
@@ -112,8 +122,13 @@ public class ParametersRenderer extends ResourceRenderer {
       if (p.hasValue()) {
         render(tr.td(), p.getValue());
       } else if (p.hasResource()) {
-        ResourceRenderer rr = RendererFactory.factory(p.getResource(), context);
-        rr.render(tr.td(), p.getResource());
+        Resource r = p.getResource();
+        td = tr.td();
+        XhtmlNode para = td.para();
+        para.tx(r.fhirType()+"/"+r.getId());
+        para.an(r.fhirType()+"_"+r.getId()).tx(" ");
+        ResourceRenderer rr = RendererFactory.factory(r, context);
+        rr.render(td, r);
       } else if (p.hasPart()) {
         tr.td();
         params(tbl, p.getPart(), 1);

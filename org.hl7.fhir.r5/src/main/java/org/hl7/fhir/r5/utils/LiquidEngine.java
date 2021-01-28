@@ -52,13 +52,13 @@ import org.hl7.fhir.utilities.xhtml.XhtmlNode;
 
 public class LiquidEngine implements IEvaluationContext {
 
-  public interface ILiquidEngineIcludeResolver {
+  public interface ILiquidEngineIncludeResolver {
     public String fetchInclude(LiquidEngine engine, String name);
   }
 
   private IEvaluationContext externalHostServices;
   private FHIRPathEngine engine;
-  private ILiquidEngineIcludeResolver includeResolver;
+  private ILiquidEngineIncludeResolver includeResolver;
 
   private class LiquidEngineContext {
     private Object externalContext;
@@ -83,11 +83,11 @@ public class LiquidEngine implements IEvaluationContext {
     engine.setHostServices(this);
   }
 
-  public ILiquidEngineIcludeResolver getIncludeResolver() {
+  public ILiquidEngineIncludeResolver getIncludeResolver() {
     return includeResolver;
   }
 
-  public void setIncludeResolver(ILiquidEngineIcludeResolver includeResolver) {
+  public void setIncludeResolver(ILiquidEngineIncludeResolver includeResolver) {
     this.includeResolver = includeResolver;
   }
 
@@ -632,11 +632,11 @@ public class LiquidEngine implements IEvaluationContext {
   }
 
   @Override
-  public List<Base> executeFunction(Object appContext, String functionName, List<List<Base>> parameters) {
+  public List<Base> executeFunction(Object appContext, List<Base> focus, String functionName, List<List<Base>> parameters) {
     if (externalHostServices == null)
       return null;
     LiquidEngineContext ctxt = (LiquidEngineContext) appContext;
-    return externalHostServices.executeFunction(ctxt.externalContext, functionName, parameters);
+    return externalHostServices.executeFunction(ctxt.externalContext, focus, functionName, parameters);
   }
 
   @Override

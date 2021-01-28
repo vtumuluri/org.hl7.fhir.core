@@ -1,7 +1,5 @@
 package org.hl7.fhir.r5.test;
 
-import static org.junit.Assert.assertTrue;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,8 +13,8 @@ import org.hl7.fhir.r5.formats.IParser.OutputStyle;
 import org.hl7.fhir.r5.model.StructureDefinition;
 import org.hl7.fhir.r5.test.utils.TestingUtilities;
 import org.hl7.fhir.r5.utils.FHIRPathEngine;
-import org.hl7.fhir.utilities.cache.FilesystemPackageCacheManager;
-import org.hl7.fhir.utilities.cache.ToolsVersion;
+import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
+import org.hl7.fhir.utilities.npm.ToolsVersion;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -41,7 +39,7 @@ public class CDARoundTripTests {
 		context.loadFromFile(TestingUtilities.loadTestResourceStream("validator", "cda", "cda.xml"), "cda.xml", null);
 		for (StructureDefinition sd : context.getStructures()) {
 			if (!sd.hasSnapshot()) {
-				System.out.println("generate snapshot for " + sd.getUrl());
+//				System.out.println("generate snapshot for " + sd.getUrl());
 				context.generateSnapshot(sd, true);
 			}
 		}
@@ -251,7 +249,7 @@ public class CDARoundTripTests {
 		  TestingUtilities.loadTestResourceStream("validator", "cda", "example.xml"), FhirFormat.XML);
 	  
 	  List<Element> title = xml.getChildrenByName("title");
-	  assertTrue(title != null && title.size() == 1);
+    Assertions.assertTrue(title != null && title.size() == 1);
 	  
 	  
 	  Element value = title.get(0).getChildren().get(0);
@@ -261,7 +259,7 @@ public class CDARoundTripTests {
 	  ByteArrayOutputStream baosXml = new ByteArrayOutputStream();
 	  Manager.compose(TestingUtilities.context(), xml, baosXml, FhirFormat.XML, OutputStyle.PRETTY, null);
 	  String cdaSerialised = baosXml.toString("UTF-8");
-	  assertTrue(cdaSerialised.indexOf("öé") > 0);
+    Assertions.assertTrue(cdaSerialised.indexOf("öé") > 0);
 	}
 
 }

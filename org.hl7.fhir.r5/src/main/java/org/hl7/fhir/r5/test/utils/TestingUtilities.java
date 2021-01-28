@@ -22,8 +22,8 @@ import org.hl7.fhir.utilities.CSFile;
 import org.hl7.fhir.utilities.TextFile;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.VersionUtilities;
-import org.hl7.fhir.utilities.cache.FilesystemPackageCacheManager;
-import org.hl7.fhir.utilities.cache.ToolsVersion;
+import org.hl7.fhir.utilities.npm.FilesystemPackageCacheManager;
+import org.hl7.fhir.utilities.npm.ToolsVersion;
 import org.hl7.fhir.utilities.tests.BaseTestingUtilities;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -77,6 +77,10 @@ public class TestingUtilities extends BaseTestingUtilities {
   }
 
   public static IWorkerContext context(String version) {
+    if ("4.5.0".equals(version)) {
+      version = "4.4.0"; // temporary work around
+    }
+    
     String v = VersionUtilities.getMajMin(version);
     if (fcontexts == null) {
       fcontexts = new HashMap<>();
@@ -145,7 +149,7 @@ public class TestingUtilities extends BaseTestingUtilities {
   public static String checkXMLIsSame(String f1, String f2) throws Exception {
     String result = compareXml(f1, f2);
     if (result != null && SHOW_DIFF) {
-      String diff = Utilities.path(System.getenv("ProgramFiles(X86)"), "WinMerge", "WinMergeU.exe");
+      String diff = Utilities.path(System.getenv("ProgramFiles"), "WinMerge", "WinMergeU.exe");
       List<String> command = new ArrayList<String>();
       command.add("\"" + diff + "\" \"" + f1 + "\" \"" + f2 + "\"");
 

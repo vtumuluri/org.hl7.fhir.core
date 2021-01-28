@@ -1,19 +1,22 @@
 package org.hl7.fhir.validation.instance.utils;
 
-import org.hl7.fhir.r5.elementmodel.Element;
-import org.hl7.fhir.r5.model.StructureDefinition;
-import org.hl7.fhir.utilities.validation.ValidationMessage;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hl7.fhir.r5.elementmodel.Element;
+import org.hl7.fhir.r5.model.StructureDefinition;
+import org.hl7.fhir.utilities.validation.ValidationMessage;
+
 public class ValidatorHostContext {
 
     private Object appContext;
-    private Element container; // bundle, or parameters
-    private Element resource;
+
+    // the resource we are actually validating right now
+    private Element resource; 
+    // the resource that is the scope of id resolution - either the same as resource, or the resource the contains that resource. This can only be one level deep.
     private Element rootResource;
+    
     private StructureDefinition profile; // the profile that contains the content being validated
     private boolean checkSpecials = true;
     private Map<String, List<ValidationMessage>> sliceRecords;
@@ -26,6 +29,7 @@ public class ValidatorHostContext {
         this.appContext = appContext;
         this.resource = element;
         this.rootResource = element;
+        // no container
     }
 
     public Object getAppContext() {
@@ -34,15 +38,6 @@ public class ValidatorHostContext {
 
     public ValidatorHostContext setAppContext(Object appContext) {
         this.appContext = appContext;
-        return this;
-    }
-
-    public Element getContainer() {
-        return container;
-    }
-
-    public ValidatorHostContext setContainer(Element container) {
-        this.container = container;
         return this;
     }
 
@@ -98,7 +93,6 @@ public class ValidatorHostContext {
         ValidatorHostContext res = new ValidatorHostContext(appContext);
         res.rootResource = resource;
         res.resource = element;
-        res.container = resource;
         res.profile = profile;
         return res;
     }
@@ -107,7 +101,6 @@ public class ValidatorHostContext {
         ValidatorHostContext res = new ValidatorHostContext(appContext);
         res.rootResource = element;
         res.resource = element;
-        res.container = resource;
         res.profile = profile;
         return res;
     }
@@ -116,7 +109,6 @@ public class ValidatorHostContext {
         ValidatorHostContext res = new ValidatorHostContext(appContext);
         res.resource = resource;
         res.rootResource = rootResource;
-        res.container = container;
         res.profile = profile;
         res.sliceRecords = sliceRecords != null ? sliceRecords : new HashMap<String, List<ValidationMessage>>();
         return res;
@@ -126,7 +118,6 @@ public class ValidatorHostContext {
         ValidatorHostContext res = new ValidatorHostContext(appContext);
         res.resource = resource;
         res.rootResource = resource;
-        res.container = container;
         res.profile = profile;
         res.checkSpecials = false;
         return res;
@@ -136,7 +127,6 @@ public class ValidatorHostContext {
         ValidatorHostContext res = new ValidatorHostContext(appContext);
         res.resource = resource;
         res.rootResource = resource;
-        res.container = resource;
         res.profile = profile;
         res.checkSpecials = false;
         return res;
@@ -146,7 +136,6 @@ public class ValidatorHostContext {
         ValidatorHostContext res = new ValidatorHostContext(appContext);
         res.resource = resource;
         res.rootResource = resource;
-        res.container = resource;
         res.profile = profile;
         res.checkSpecials = false;
         res.sliceRecords = new HashMap<String, List<ValidationMessage>>();

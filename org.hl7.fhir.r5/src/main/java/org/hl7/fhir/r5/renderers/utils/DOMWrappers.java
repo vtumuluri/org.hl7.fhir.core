@@ -206,6 +206,11 @@ public class DOMWrappers {
       return getTypeCode();
     }
 
+    @Override
+    public ElementDefinition getElementDefinition() {
+      return definition;
+    }
+
   }
 
   public static class ResourceWrapperElement extends WrapperBaseImpl implements ResourceWrapper {
@@ -357,6 +362,16 @@ public class DOMWrappers {
     public String fhirType() {
       return wrapped.getNodeName();
     }
+    
+    @Override
+    public PropertyWrapper getChildByName(String name) {
+      for (PropertyWrapper p : children())
+        if (p.getName().equals(name))
+          return p;
+      return null;
+    }
+
+
   }
 
 }

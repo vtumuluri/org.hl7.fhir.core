@@ -1,7 +1,5 @@
 package org.hl7.fhir.r5.model;
 
-
-
 /*
   Copyright (c) 2011+, HL7, Inc.
   All rights reserved.
@@ -30,7 +28,7 @@ package org.hl7.fhir.r5.model;
   POSSIBILITY OF SUCH DAMAGE.
   */
 
-// Generated on Mon, May 11, 2020 09:58+1000 for FHIR vcurrent
+// Generated on Thu, Aug 20, 2020 19:42+1000 for FHIR vcurrent
 
 
   
@@ -147,8 +145,8 @@ public class ResourceFactory extends Factory {
             return new EventDefinition();
         if ("Evidence".equals(name))
             return new Evidence();
-        if ("EvidenceFocus".equals(name))
-            return new EvidenceFocus();
+        if ("EvidenceReport".equals(name))
+            return new EvidenceReport();
         if ("EvidenceVariable".equals(name))
             return new EvidenceVariable();
         if ("ExampleScenario".equals(name))
@@ -455,8 +453,6 @@ public class ResourceFactory extends Factory {
             return new Signature();
         if ("Statistic".equals(name))
             return new Statistic();
-        if ("SubstanceAmount".equals(name))
-            return new SubstanceAmount();
         if ("Timing".equals(name))
             return new Timing();
         if ("TriggerDefinition".equals(name))
@@ -542,7 +538,7 @@ public class ResourceFactory extends Factory {
         case -1093178557: return new EpisodeOfCare();
         case 1851868013: return new EventDefinition();
         case 447611511: return new Evidence();
-        case -1696443231: return new EvidenceFocus();
+        case -715436405: return new EvidenceReport();
         case -1162161645: return new EvidenceVariable();
         case 1175230202: return new ExampleScenario();
         case -1001676601: return new ExplanationOfBenefit();
@@ -673,7 +669,6 @@ public class ResourceFactory extends Factory {
         case 1824308900: return new SampledData();
         case -1217415016: return new Signature();
         case -77293264: return new Statistic();
-        case 1549526472: return new SubstanceAmount();
         case -1789797270: return new Timing();
         case 770498827: return new TriggerDefinition();
         case 1071332590: return new UsageContext();
@@ -682,6 +677,33 @@ public class ResourceFactory extends Factory {
         throw new FHIRException("Unknown Resource or Type Name '"+name+"'");
     }
   }
+
+    public static DataType createPrimitive(String type, String value) {
+      switch (type) {
+      case "boolean": return new BooleanType(value);
+      case "integer": return new IntegerType(value);
+      case "integer64": return new Integer64Type(value);
+      case "string": return new StringType(value);
+      case "decimal": return new DecimalType(value);
+      case "uri": return new UriType(value);
+      case "url": return new UrlType(value);
+      case "canonical": return new CanonicalType(value);
+      case "base64Binary": return new Base64BinaryType(value);
+      case "instant": return new InstantType(value);
+      case "date": return new DateType(value);
+      case "dateTime": return new DateTimeType(value);
+      case "time": return new TimeType(value);
+      case "code": return new CodeType(value);
+      case "oid": return new OidType(value);
+      case "id": return new IdType(value);
+      case "markdown": return new MarkdownType(value);
+      case "unsignedInt": return new UnsignedIntType(value);
+      case "positiveInt": return new PositiveIntType(value);
+      case "uuid": return new UuidType(value);
+      default:
+        throw new FHIRException("Unknown Primitive Type '"+type+"'");
+      }
+    }
 
 
 }

@@ -3,15 +3,15 @@ package org.hl7.fhir.validation.instance.type;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.hl7.fhir.r5.model.ValueSet;
 import org.hl7.fhir.r5.context.IWorkerContext;
 import org.hl7.fhir.r5.context.IWorkerContext.CodingValidationRequest;
 import org.hl7.fhir.r5.context.IWorkerContext.ValidationResult;
 import org.hl7.fhir.r5.elementmodel.Element;
-import org.hl7.fhir.r5.model.CodeSystem;
 import org.hl7.fhir.r5.model.Coding;
 import org.hl7.fhir.r5.model.Resource;
+import org.hl7.fhir.r5.model.ValueSet;
 import org.hl7.fhir.r5.terminologies.ValueSetExpander.TerminologyServiceErrorClass;
+import org.hl7.fhir.r5.utils.XVerExtensionManager;
 import org.hl7.fhir.utilities.Utilities;
 import org.hl7.fhir.utilities.VersionUtilities;
 import org.hl7.fhir.utilities.i18n.I18nConstants;
@@ -21,7 +21,7 @@ import org.hl7.fhir.utilities.validation.ValidationMessage.Source;
 import org.hl7.fhir.utilities.validation.ValidationOptions;
 import org.hl7.fhir.validation.BaseValidator;
 import org.hl7.fhir.validation.TimeTracker;
-import org.hl7.fhir.validation.instance.type.ValueSetValidator.VSCodingValidationRequest;
+import org.hl7.fhir.validation.instance.InstanceValidator;
 import org.hl7.fhir.validation.instance.utils.NodeStack;
 
 public class ValueSetValidator extends BaseValidator {
@@ -41,10 +41,13 @@ public class ValueSetValidator extends BaseValidator {
     
   }
 
-  public ValueSetValidator(IWorkerContext context, TimeTracker timeTracker) {
-    super(context);
+  private InstanceValidator parent;
+
+  public ValueSetValidator(IWorkerContext context, TimeTracker timeTracker, InstanceValidator parent, XVerExtensionManager xverManager) {
+    super(context, xverManager);
     source = Source.InstanceValidator;
     this.timeTracker = timeTracker;
+    this.parent = parent;
   }
   
   public void validateValueSet(List<ValidationMessage> errors, Element vs, NodeStack stack) {
@@ -52,28 +55,28 @@ public class ValueSetValidator extends BaseValidator {
       List<Element> composes = vs.getChildrenByName("compose");
       int cc = 0;
       for (Element compose : composes) {
-        validateValueSetCompose(errors, compose, stack.push(compose, cc, null, null));
+        validateValueSetCompose(errors, compose, stack.push(compose, cc, null, null), vs.getNamedChildValue("url"), "retired".equals(vs.getNamedChildValue("url")));
         cc++;
       }
     }
   }
 
-  private void validateValueSetCompose(List<ValidationMessage> errors, Element compose, NodeStack stack) {
+  private void validateValueSetCompose(List<ValidationMessage> errors, Element compose, NodeStack stack, String vsid, boolean retired) {
     List<Element> includes = compose.getChildrenByName("include");
     int ci = 0;
     for (Element include : includes) {
-      validateValueSetInclude(errors, include, stack.push(include, ci, null, null));
+      validateValueSetInclude(errors, include, stack.push(include, ci, null, null), vsid, retired);
       ci++;
     }    
     List<Element> excludes = compose.getChildrenByName("exclude");
     int ce = 0;
     for (Element exclude : excludes) {
-      validateValueSetInclude(errors, exclude, stack.push(exclude, ce, null, null));
+      validateValueSetInclude(errors, exclude, stack.push(exclude, ce, null, null), vsid, retired);
       ce++;
     }    
   }
   
-  private void validateValueSetInclude(List<ValidationMessage> errors, Element include, NodeStack stack) {
+  private void validateValueSetInclude(List<ValidationMessage> errors, Element include, NodeStack stack, String vsid, boolean retired) {
     String system = include.getChildValue("system");
     String version = include.getChildValue("version");
     List<Element> valuesets = include.getChildrenByName("valueSet");
@@ -110,13 +113,20 @@ public class ValueSetValidator extends BaseValidator {
         }
         cc++;
       }    
-      if (batch.size() > 0) {
+      if (parent.isValidateValueSetCodesOnTxServer() && batch.size() > 0) {
+        long t = System.currentTimeMillis();
+        if (parent.isDebug()) {
+          System.out.println("  : Validate "+batch.size()+" codes from "+system+" for "+vsid);
+        }
         context.validateCodeBatch(ValidationOptions.defaults(), batch, null);
+        if (parent.isDebug()) {
+          System.out.println("  :   .. "+(System.currentTimeMillis()-t)+"ms");
+        }
         for (VSCodingValidationRequest cv : batch) {
           if (version == null) {
-            warning(errors, IssueType.BUSINESSRULE, cv.getStack().getLiteralPath(), cv.getResult().isOk(), I18nConstants.VALUESET_INCLUDE_INVALID_CONCEPT_CODE, system, cv.getCoding().getCode());
+            warningOrHint(errors, IssueType.BUSINESSRULE, cv.getStack().getLiteralPath(), cv.getResult().isOk(), !retired, I18nConstants.VALUESET_INCLUDE_INVALID_CONCEPT_CODE, system, cv.getCoding().getCode());
           } else {
-            warning(errors, IssueType.BUSINESSRULE, cv.getStack().getLiteralPath(), cv.getResult().isOk(), I18nConstants.VALUESET_INCLUDE_INVALID_CONCEPT_CODE_VER, system, version, cv.getCoding().getCode());
+            warningOrHint(errors, IssueType.BUSINESSRULE, cv.getStack().getLiteralPath(), cv.getResult().isOk(), !retired, I18nConstants.VALUESET_INCLUDE_INVALID_CONCEPT_CODE_VER, system, version, cv.getCoding().getCode());
           }
         }
       }

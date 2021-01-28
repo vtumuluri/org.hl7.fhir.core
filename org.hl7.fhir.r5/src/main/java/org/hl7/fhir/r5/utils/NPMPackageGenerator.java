@@ -62,9 +62,9 @@ import org.hl7.fhir.r5.model.ImplementationGuide.ImplementationGuideDependsOnCom
 import org.hl7.fhir.utilities.CommaSeparatedStringBuilder;
 import org.hl7.fhir.utilities.TextFile;
 import org.hl7.fhir.utilities.Utilities;
-import org.hl7.fhir.utilities.cache.NpmPackageIndexBuilder;
-import org.hl7.fhir.utilities.cache.PackageGenerator.PackageType;
-import org.hl7.fhir.utilities.cache.ToolsVersion;
+import org.hl7.fhir.utilities.npm.NpmPackageIndexBuilder;
+import org.hl7.fhir.utilities.npm.ToolsVersion;
+import org.hl7.fhir.utilities.npm.PackageGenerator.PackageType;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -102,19 +102,20 @@ public class NPMPackageGenerator {
   private JsonObject packageJ;
   private JsonObject packageManifest;
   private NpmPackageIndexBuilder indexer;
+  private String igVersion;
 
 
-  public NPMPackageGenerator(String destFile, String canonical, String url, PackageType kind, ImplementationGuide ig, Date date) throws FHIRException, IOException {
+  public NPMPackageGenerator(String destFile, String canonical, String url, PackageType kind, ImplementationGuide ig, Date date, boolean notForPublication) throws FHIRException, IOException {
     super();
     this.destFile = destFile;
     start();
     List<String> fhirVersion = new ArrayList<>();
     for (Enumeration<FHIRVersion> v : ig.getFhirVersion())
       fhirVersion.add(v.asStringValue());
-    buildPackageJson(canonical, kind, url, date, ig, fhirVersion);
+    buildPackageJson(canonical, kind, url, date, ig, fhirVersion, notForPublication);
   }
 
-  public static NPMPackageGenerator subset(NPMPackageGenerator master, String destFile, String id, String name, Date date) throws FHIRException, IOException {
+  public static NPMPackageGenerator subset(NPMPackageGenerator master, String destFile, String id, String name, Date date, boolean notForPublication) throws FHIRException, IOException {
     JsonObject p = master.packageJ.deepCopy();
     p.remove("name");
     p.addProperty("name", id);
@@ -122,24 +123,30 @@ public class NPMPackageGenerator {
     p.addProperty("type", PackageType.SUBSET.getCode());    
     p.remove("title");
     p.addProperty("title", name);
+    if (notForPublication) {
+      p.addProperty("notForPublication", true);
+    }
 
-    return new NPMPackageGenerator(destFile, p, date);
+    return new NPMPackageGenerator(destFile, p, date, notForPublication);
   }
 
-  public NPMPackageGenerator(String destFile, String canonical, String url, PackageType kind, ImplementationGuide ig, Date date, List<String> fhirVersion) throws FHIRException, IOException {
+  public NPMPackageGenerator(String destFile, String canonical, String url, PackageType kind, ImplementationGuide ig, Date date, List<String> fhirVersion, boolean notForPublication) throws FHIRException, IOException {
     super();
     this.destFile = destFile;
     start();
-    buildPackageJson(canonical, kind, url, date, ig, fhirVersion);
+    buildPackageJson(canonical, kind, url, date, ig, fhirVersion, notForPublication);
   }
 
-  public NPMPackageGenerator(String destFile, JsonObject npm, Date date) throws FHIRException, IOException {
+  public NPMPackageGenerator(String destFile, JsonObject npm, Date date, boolean notForPublication) throws FHIRException, IOException {
     super();
     String dt = new SimpleDateFormat("yyyyMMddHHmmss").format(date);
     packageJ = npm;
     packageManifest = new JsonObject();
     packageManifest.addProperty("version", npm.get("version").getAsString());
     packageManifest.addProperty("date", dt);
+    if (notForPublication) {
+      packageManifest.addProperty("notForPublication", true);
+    }
     npm.addProperty("date", dt);
     packageManifest.addProperty("name", npm.get("name").getAsString());
     this.destFile = destFile;
@@ -152,19 +159,23 @@ public class NPMPackageGenerator {
     }
   }
 
-  private void buildPackageJson(String canonical, PackageType kind, String web, Date date, ImplementationGuide ig, List<String> fhirVersion) throws FHIRException, IOException {
+  private void buildPackageJson(String canonical, PackageType kind, String web, Date date, ImplementationGuide ig, List<String> fhirVersion, boolean notForPublication) throws FHIRException, IOException {
     String dtHuman = new SimpleDateFormat("EEE, MMM d, yyyy HH:mmZ", new Locale("en", "US")).format(date);
     String dt = new SimpleDateFormat("yyyyMMddHHmmss").format(date);
 
     CommaSeparatedStringBuilder b = new CommaSeparatedStringBuilder();
-    if (!ig.hasPackageId())
+    if (!ig.hasPackageId()) {
       b.append("packageId");
-    if (!ig.hasVersion())
+    }
+    if (!ig.hasVersion()) {
       b.append("version");
-    if (!ig.hasFhirVersion())
+    }
+    if (!ig.hasFhirVersion()) {
       b.append("fhirVersion");
-    if (!ig.hasLicense())
+    }
+    if (!ig.hasLicense()) {
       b.append("license");
+    }
     for (ImplementationGuideDependsOnComponent d : ig.getDependsOn()) {
       if (!d.hasVersion()) {
         b.append("dependsOn.version("+d.getUri()+")");
@@ -174,17 +185,24 @@ public class NPMPackageGenerator {
     JsonObject npm = new JsonObject();
     npm.addProperty("name", ig.getPackageId());
     npm.addProperty("version", ig.getVersion());
+    igVersion = ig.getVersion();
     npm.addProperty("tools-version", ToolsVersion.TOOLS_VERSION);
     npm.addProperty("type", kind.getCode());
     npm.addProperty("date", dt);
-    if (ig.hasLicense())
+    if (ig.hasLicense()) {
       npm.addProperty("license", ig.getLicense().toCode());
+    }
     npm.addProperty("canonical", canonical);
+    if (notForPublication) {
+      npm.addProperty("notForPublication", true);
+    }
     npm.addProperty("url", web);
-    if (ig.hasTitle())
+    if (ig.hasTitle()) {
       npm.addProperty("title", ig.getTitle());
-    if (ig.hasDescription())
+    }
+    if (ig.hasDescription()) {
       npm.addProperty("description", ig.getDescription()+ " (built "+dtHuman+timezone()+")");
+    }
     JsonArray vl = new JsonArray();
     
     npm.add("fhirVersions", vl);
@@ -205,8 +223,9 @@ public class NPMPackageGenerator {
         dep.addProperty(d.getPackageId(), d.getVersion());
       }
     }
-    if (ig.hasPublisher())
+    if (ig.hasPublisher()) {
       npm.addProperty("author", ig.getPublisher());
+    }
     JsonArray m = new JsonArray();
     for (ContactDetail t : ig.getContact()) {
       String email = email(t.getTelecom());
@@ -376,6 +395,10 @@ public class NPMPackageGenerator {
         }
       }
     }
+  }
+
+  public String version() {
+    return igVersion;
   }
 
 

@@ -31,9 +31,9 @@ import org.hl7.fhir.r5.model.StructureMap.StructureMapGroupRuleComponent;
 import org.hl7.fhir.r5.model.StructureMap.StructureMapGroupRuleDependentComponent;
 import org.hl7.fhir.r5.model.StructureMap.StructureMapGroupRuleSourceComponent;
 import org.hl7.fhir.r5.model.StructureMap.StructureMapGroupRuleTargetComponent;
-import org.hl7.fhir.r5.model.StructureMap.StructureMapGroupTypeMode;
 import org.hl7.fhir.r5.model.StructureMap.StructureMapTransform;
 import org.hl7.fhir.r5.model.UrlType;
+import org.hl7.fhir.r5.utils.structuremap.StructureMapUtilities;
 import org.hl7.fhir.utilities.CSVReader;
 import org.hl7.fhir.utilities.TextFile;
 import org.hl7.fhir.utilities.Utilities;
@@ -248,7 +248,6 @@ public class MappingSheetParser {
     if (metadata.containsKey("copyright"))
       map.setCopyright(metadata.get("copyright"));
     StructureMapGroupComponent grp = map.addGroup();
-    grp.setTypeMode(StructureMapGroupTypeMode.NONE);
     for (MappingRow row : rows) {
       StructureMapGroupRuleComponent rule = grp.addRule();
       rule.setName(row.getSequence());
